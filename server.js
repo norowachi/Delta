@@ -1,3 +1,5 @@
+//! npm install express passport passport-jwt jsonwebtoken bcrypt socket.io redis dotenv
+
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
