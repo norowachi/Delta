@@ -1,0 +1,56 @@
+export const EPOCH = 1620000000n; // Set the custom epoch (start timestamp)
+
+let lastTimestamp = 0n; // Initialize the last timestamp
+
+export const generateSnowflakeID = (): string => {
+	const timestamp = getTimestamp();
+	// Set the worker ID (if applicable)
+	const workerID = 0n;
+	// Set the sequence number (if applicable)
+	const sequenceNumber = 0n;
+	const randomBits = getRandomBits();
+	// Adjust timestamp to the left by 22 bits
+	const timestampBits = (timestamp - EPOCH) << 22n;
+	// Adjust worker ID to the left by 17 bits
+	const workerIDBits = workerID << 17n;
+	// Adjust sequence number to the left by 12 bits
+	const sequenceNumberBits = sequenceNumber << 12n;
+
+	const snowflakeID = (
+		timestampBits |
+		workerIDBits |
+		sequenceNumberBits |
+		randomBits
+	).toString();
+
+	return snowflakeID;
+};
+
+export const getTimestampFromSnowflakeID = (snowflakeID: string): number => {
+	// Extract timestamp bits by shifting right by 22 bits
+	const timestampBits = BigInt(snowflakeID) >> 22n;
+	// Add epoch to get the actual timestamp
+	const timestamp = Number(timestampBits + EPOCH);
+
+	return timestamp;
+};
+
+const getTimestamp = (): bigint => {
+	// Get the current timestamp in seconds
+	let timestamp = BigInt(Math.floor(Date.now() / 1000));
+
+	// Ensure the timestamp is always greater than or equal to the previous timestamp
+	if (timestamp <= lastTimestamp) {
+		timestamp = lastTimestamp + 1n;
+	}
+
+	lastTimestamp = timestamp;
+
+	return timestamp;
+};
+
+const getRandomBits = (): bigint => {
+	// Generate a random number between 0 and 4095 (12 bits)
+	const random = BigInt(Math.floor(Math.random() * 4096));
+	return random;
+};
