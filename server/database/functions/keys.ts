@@ -6,6 +6,7 @@ export const getKeys = async (): Promise<jose.JWK.Key[] | null> => {
 	if (!keys) return null;
 	return keys as jose.JWK.Key[];
 };
+
 export const addKey = async (key: jose.JWK.Key) => {
 	try {
 		const newKey = new Keys({

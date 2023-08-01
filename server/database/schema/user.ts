@@ -14,6 +14,13 @@ const userSchema = new mongoose.Schema<IUser>({
 	bot: { type: Boolean, required: true },
 	system: { type: Boolean, required: false },
 	token: { type: String, required: true },
+	guilds: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: "Guild",
+			required: false,
+		},
+	],
 });
 
 export const User = mongoose.model<IUser>("User", userSchema);

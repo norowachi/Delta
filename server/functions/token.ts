@@ -54,9 +54,7 @@ export const generateAuthToken = async (
 };
 
 // Retrieves the user from the JWE token
-export const getUserFromToken = async (
-	token: string
-): Promise<IUser | null> => {
+export const getUserFromToken = async (token: string) => {
 	try {
 		const payload = await decryptToken(token);
 		const user = await getUserById(payload.userId);

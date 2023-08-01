@@ -12,11 +12,12 @@ export interface IUser {
 	bot: boolean;
 	system: boolean;
 	token: string;
+	guilds: string[];
 }
 
 export interface IMember {
 	id: string;
-	user: IUser;
+	user: Omit<IUser, "email" | "password" | "token">;
 	guildId: string;
 	nickname: string;
 	owner: boolean;
@@ -28,9 +29,11 @@ export interface IMessage {
 	content: string;
 	embeds: IEmbed[];
 	system: boolean;
-	author: IUser;
-	guildId: string | null;
-	temporary: boolean;
+	author: Omit<IUser, "email" | "password" | "token">;
+	channelId: string;
+	guildId?: string | null;
+	hidden: boolean; // ephermal equivalent but that word is too hard for me
+	readBy: string[];
 }
 
 export interface IEmbed {
@@ -48,16 +51,25 @@ export interface IGuild {
 	memberCount: number;
 	members: string[];
 	ownerId: string;
-	owner: IUser;
 	channels: IChannel[];
 	deleted: boolean;
+}
+
+//! Important
+export enum ChannelTypes {
+	DM = 0,
+	TEXT = 1,
+	VOICE = 2,
 }
 
 export interface IChannel {
 	id: string;
 	name: string;
-	stickyMessage: IMessage;
+	stickyMessage?: IMessage;
 	messages: IMessage[];
+	guildId: string;
+	members: string[] | null;
+	type: ChannelTypes;
 }
 
 // Define the TokenPayload interface

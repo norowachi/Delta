@@ -131,6 +131,8 @@ dist
 
 # testing
 /coverage
+/archive
 
 # production
 /build
+/dist

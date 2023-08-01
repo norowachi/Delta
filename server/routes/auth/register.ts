@@ -2,15 +2,14 @@ import express from "express";
 import bcrypt from "bcrypt";
 import { User } from "../../database/schema/user";
 import { generateDiscriminator } from "../../functions/discriminator";
-import { generateSnowflakeID } from "../../functions/uid";
-import { IUser } from "../../interfaces";
-import { generateAuthToken } from "../../functions/token";
+import { createUser } from "../../database/functions/user";
+import md5 from "md5";
 
 const registerRouter = express.Router();
 
 // Register route
 registerRouter.post("/", async (req, res) => {
-	const { username, email, password, avatar } = req.body;
+	const { username, email, password } = req.body;
 	try {
 		if (await User.findOne({ email }))
 			return res
@@ -26,27 +25,26 @@ registerRouter.post("/", async (req, res) => {
 		// Hash the password
 		const hashedPassword = await bcrypt.hash(password, 10);
 
-		const id = generateSnowflakeID();
+		//!Important: chooses a default avatar if user has no gravatar
+		const avatar = `https://www.gravatar.com/avatar/${md5(
+			email
+		)}?s=512&d=${encodeURI(
+			`https://${req.get("host")}/images/delta-${parseInt(discriminator) % 5}.png`
+		)}`;
+
 		// Create a new user
-		const newUser = new User<IUser>({
-			id: id,
-			username,
-			discriminator,
-			avatar,
+		await createUser({
+			username: username,
+			discriminator: discriminator,
+			avatar: avatar,
 			roles: 0,
-			password: hashedPassword,
 			email: email,
-			disabled: false,
-			deleted: false,
-			bot: false,
-			system: false,
-			token: await generateAuthToken(id, email, password),
+			password: hashedPassword,
 		});
-		await newUser.save();
+
 
 		res.status(201).json({ message: "User registered successfully" });
 	} catch (error) {
-		console.error("Error registering user:", error);
 		res.status(500).json({ message: "Internal server error" });
 	}
 });

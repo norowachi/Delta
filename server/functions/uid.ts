@@ -2,7 +2,12 @@ export const EPOCH = 1620000000n; // Set the custom epoch (start timestamp)
 
 let lastTimestamp = 0n; // Initialize the last timestamp
 
-export const generateSnowflakeID = (): string => {
+/**
+ *
+ * @param type u - user | c - channel | g - guild | m - message
+ * @returns snowflake id
+ */
+export const generateSnowflakeID = (type: "u" | "c" | "g" | "m"): string => {
 	const timestamp = getTimestamp();
 	// Set the worker ID (if applicable)
 	const workerID = 0n;
@@ -23,12 +28,12 @@ export const generateSnowflakeID = (): string => {
 		randomBits
 	).toString();
 
-	return snowflakeID;
+	return type + snowflakeID;
 };
 
 export const getTimestampFromSnowflakeID = (snowflakeID: string): number => {
 	// Extract timestamp bits by shifting right by 22 bits
-	const timestampBits = BigInt(snowflakeID) >> 22n;
+	const timestampBits = BigInt(snowflakeID.slice(1)) >> 22n; //remove the 1st character - as it is an Identifier (check README)
 	// Add epoch to get the actual timestamp
 	const timestamp = Number(timestampBits + EPOCH);
 

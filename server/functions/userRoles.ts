@@ -4,7 +4,7 @@ export const getRolesFromValue = (value: number): Role[] => {
 	const roles: Role[] = [];
 
 	for (const role in Roles) {
-		const roleValue = Roles[role];
+		const roleValue = Roles[role as Role];
 
 		if (typeof roleValue === "number" && (value & roleValue) === roleValue) {
 			roles.push(role as Role);
