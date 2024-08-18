@@ -35,7 +35,7 @@ loginRouter.post("/", async (req, res) => {
 		res.status(200).json({ token });
 	} catch (error) {
 		console.error("Error logging in user:", error);
-		res.status(500).json({ message: "Internal server error" });
+		res.sendStatus(500);
 	}
 });
 

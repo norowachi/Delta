@@ -4,18 +4,18 @@
 	"description": "",
 	"main": "dist/server.js",
 	"dependencies": {
-		"bcrypt": "^5.1.0",
+		"bcrypt": "^5.1.1",
 		"connect-mongodb-session": "^3.1.1",
 		"cookie-parser": "^1.4.6",
-		"dotenv": "^16.3.1",
-		"express": "^4.18.2",
-		"express-rate-limit": "^6.7.1",
-		"express-session": "^1.17.3",
+		"dotenv": "^16.4.5",
+		"express": "^4.19.2",
+		"express-rate-limit": "^6.11.2",
+		"express-session": "^1.18.0",
 		"md5": "^2.3.0",
-		"mongoose": "^7.4.0",
+		"mongoose": "^7.7.0",
 		"node-jose": "^2.2.0",
 		"path": "^0.12.7",
-		"socket.io": "^4.7.1"
+		"socket.io": "^4.7.5"
 	},
 	"scripts": {
 		"start": "tsc & node dist/server.js",
@@ -33,12 +33,12 @@
 	},
 	"homepage": "https://github.com/Noro95/Delta#readme",
 	"devDependencies": {
-		"@types/bcrypt": "^5.0.0",
-		"@types/connect-mongodb-session": "^2.4.4",
-		"@types/cookie-parser": "^1.4.3",
-		"@types/express": "^4.17.17",
-		"@types/express-session": "^1.17.7",
-		"@types/md5": "^2.3.2",
-		"@types/node-jose": "^1.1.10"
+		"@types/bcrypt": "^5.0.2",
+		"@types/connect-mongodb-session": "^2.4.7",
+		"@types/cookie-parser": "^1.4.7",
+		"@types/express": "^4.17.21",
+		"@types/express-session": "^1.18.0",
+		"@types/md5": "^2.3.5",
+		"@types/node-jose": "^1.1.13"
 	}
 }

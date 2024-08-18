@@ -52,8 +52,8 @@ app.use(function (_req, res, next) {
 // only allow frontend site
 app.use(cors({ origin: frontendOrigin }));
 
-app.use(bodyParser.json({ limit: "125mb" }));
-app.use(bodyParser.urlencoded({ extended: true, limit: "125mb" }));
+app.use(bodyParser.json({ limit: "25mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 
 // initializing mongodb store
 const store = new (MongoDBStore(session))({
