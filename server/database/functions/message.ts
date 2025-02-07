@@ -9,7 +9,7 @@ export const getMessageById = async (messageId: string) => {
 	if (!message) return null;
 	const author = (await message.populate("author")) as Omit<
 		IUser,
-		"email" | "password" | "token"
+		"password" | "token"
 	>;
 	message.author = author;
 	message.readBy = ((await message.populate("readBy")) as IUser[]).map(
@@ -33,7 +33,7 @@ export const getMessagesById = async (messagesId: string[]) => {
 			system: msg.system,
 			author: (await msg.populate("author")) as Omit<
 				IUser,
-				"email" | "password" | "token"
+				"password" | "token"
 			>,
 			channelId: msg.channelId,
 			guildId: msg.guildId,
@@ -90,7 +90,7 @@ export const getMessages = async (
 			system: msg.system,
 			author: (await msg.populate("author")) as Omit<
 				IUser,
-				"email" | "password" | "token"
+				"password" | "token"
 			>,
 			channelId: msg.channelId,
 			guildId: msg.guildId,

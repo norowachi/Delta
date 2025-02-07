@@ -3,9 +3,8 @@ import { IUser } from "../../interfaces";
 
 const userSchema = new mongoose.Schema<IUser>({
 	id: { type: String, required: true },
-	username: { type: String, required: true },
-	discriminator: { type: String, required: true },
-	email: { type: String, required: true },
+	username: { type: String, required: true, unique: true },
+	handle: { type: String, required: true, unique: true },
 	avatar: { type: String, required: true },
 	roles: { type: Number, required: false },
 	password: { type: String, required: true },

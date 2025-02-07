@@ -2,22 +2,22 @@ import express from "express";
 import bcrypt from "bcrypt";
 import { AuthenticateToken, generateAuthToken } from "../../functions/token";
 import { User } from "../../database/schema/user";
+import { IUser } from "../../interfaces";
 
 const loginRouter = express.Router();
 
 // Login route
 loginRouter.post("/", async (req, res) => {
-	const { username, email, password } = req.body;
-	if (!username || !password || !email) {
+	const { username, password, handle } = req.body;
+	if (!username || !password || !handle) {
 		return res.status(400).json({ message: "Invalid credentials" });
 	}
 
 	try {
 		// Check if the user exists
-		const user =
-			(await User.findOne({ username })) || (await User.findOne({ email }));
+		const user = await User.findOne<IUser>({ $or: [{ username }, { handle }] });
 		if (!user) {
-			return res.status(401).json({ message: "Invalid username or email" });
+			return res.status(401).json({ message: "Invalid username or handle" });
 		}
 
 		// Compare the hashed password
@@ -29,7 +29,7 @@ loginRouter.post("/", async (req, res) => {
 		// Generate or send the authentication token
 		let token: string = user.token;
 		if (!(await AuthenticateToken(user.token))) {
-			token = await generateAuthToken(user.id, user.email, user.password);
+			token = await generateAuthToken(user.id, user.handle, user.password);
 		}
 		console.log(token);
 		res.status(200).json({ token });

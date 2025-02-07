@@ -1,0 +1,33 @@
+services:
+  server:
+    build:
+      context: .
+    environment:
+      NODE_ENV: production
+    ports:
+      - 7831:7831
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  mongo:
+    image: mongodb/mongodb-community-server:7.0.9-ubi8
+    container_name: mongo
+    ports:
+      - 127.0.0.1:27017:27017
+    volumes:
+      - data:/data/db
+      - config:/data/configdb
+    restart: unless-stopped
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  data:
+    driver: local
+  config:
+    driver: local

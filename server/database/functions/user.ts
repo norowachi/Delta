@@ -1,3 +1,4 @@
+import { env } from "../../constants";
 import { generateAuthToken } from "../../functions/token";
 import { generateSnowflakeID } from "../../functions/uid";
 import { IUser } from "../../interfaces";
@@ -17,7 +18,14 @@ export const getUserByToken = async (token: string) => {
 export const createUser = async (
 	data: Omit<
 		IUser,
-		"id" | "disabled" | "deleted" | "bot" | "system" | "token" | "guilds"
+		| "id"
+		| "disabled"
+		| "deleted"
+		| "bot"
+		| "system"
+		| "token"
+		| "guilds"
+		| "avatar"
 	>
 ) => {
 	try {
@@ -25,16 +33,15 @@ export const createUser = async (
 		const user = new User<IUser>({
 			id: id,
 			username: data.username,
-			discriminator: data.discriminator,
-			avatar: data.avatar,
+			handle: data.handle,
+			avatar: `https://${env.API_ORIGIN}/images/delta-${parseInt(id) % 5}.png`,
 			roles: 0,
 			password: data.password,
-			email: data.email,
 			disabled: false,
 			deleted: false,
 			bot: false,
 			system: false,
-			token: await generateAuthToken(id, data.email, data.password),
+			token: await generateAuthToken(id, data.handle, data.password),
 			guilds: [], //TODO: add the base - in this case "townhall" guild id
 		});
 		await user.save();

@@ -1,4 +1,17 @@
+import { config } from "dotenv";
 import { IUser } from "./interfaces";
+import { join } from "path";
+
+config({
+	path: join(import.meta.dirname, ".env"),
+});
+
+export const env = {
+	MONGODB_URL: "mongodb://localhost:27017/delta",
+	SESSION_SECRET: process.env.SESSION_SECRET,
+	PORT: process.env.PORT,
+	API_ORIGIN: process.env.API_ORIGIN,
+};
 
 export const Roles = {
 	STAFF: 1 << 0, // user is a staff member
@@ -11,14 +24,13 @@ export type Role = keyof typeof Roles;
 export const Delta: IUser = {
 	id: "0",
 	username: "Delta",
-	discriminator: "0000",
+	handle: "delta",
 	bot: true,
 	roles: Roles.STAFF | Roles.BOT | Roles.VERIFIED,
 	system: true,
 	avatar: "",
 	disabled: false,
 	deleted: false,
-	email: "",
 	password: "",
 	token: "",
 	guilds: [],
@@ -88,5 +100,3 @@ export const Errors = {
 	"510": "Not Extended",
 	"511": "Network Authentication Required",
 };
-
-export const frontendOrigin = "";

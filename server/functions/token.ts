@@ -36,7 +36,7 @@ const decryptToken = async (token: string): Promise<TokenPayload> => {
 // Generates a JWE token with the provided payload
 export const generateAuthToken = async (
 	userId: string,
-	email: string,
+	handle: string,
 	password: string
 ): Promise<string> => {
 	// one year in seconds = 60 * 60 * 24 * 365
@@ -44,7 +44,7 @@ export const generateAuthToken = async (
 		Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365 - Number(EPOCH);
 	const payload: TokenPayload = {
 		userId,
-		email,
+		handle,
 		password,
 		exp: expiry,
 	};
@@ -61,7 +61,7 @@ export const getUserFromToken = async (token: string) => {
 
 		if (!user) return null;
 		if (
-			payload.email !== user.email ||
+			payload.handle !== user.handle ||
 			payload.userId !== user.id ||
 			payload.password !== user.password
 		)
@@ -79,7 +79,7 @@ export const AuthenticateToken = async (token: string) => {
 	const user = await getUserById(payload.userId);
 	if (!user) return false;
 
-	if (payload.email !== user.email || payload.password !== user.password)
+	if (payload.handle !== user.handle || payload.password !== user.password)
 		return false;
 	if (Math.floor(Date.now() / 1000) - Number(EPOCH) >= payload.exp)
 		return false;

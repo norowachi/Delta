@@ -2,10 +2,9 @@
 export interface IUser {
 	id: string;
 	username: string;
-	discriminator: string;
+	handle: string;
 	avatar: string | null;
 	roles: number;
-	email: string;
 	password: string;
 	disabled: boolean;
 	deleted: boolean;
@@ -17,7 +16,7 @@ export interface IUser {
 
 export interface IMember {
 	id: string;
-	user: Omit<IUser, "email" | "password" | "token">;
+	user: Omit<IUser, "password" | "token">;
 	guildId: string;
 	nickname: string;
 	owner: boolean;
@@ -29,7 +28,7 @@ export interface IMessage {
 	content: string;
 	embeds: IEmbed[];
 	system: boolean;
-	author: Omit<IUser, "email" | "password" | "token">;
+	author: Omit<IUser, "password" | "token">;
 	channelId: string;
 	guildId?: string | null;
 	hidden: boolean; // ephermal equivalent but that word is too hard for me
@@ -75,7 +74,7 @@ export interface IChannel {
 // Define the TokenPayload interface
 export interface TokenPayload {
 	userId: string;
-	email: string;
+	handle: string;
 	password: string;
 	exp: number;
 }

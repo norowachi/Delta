@@ -46,7 +46,7 @@ const getTimestamp = (): bigint => {
 
 	// Ensure the timestamp is always greater than or equal to the previous timestamp
 	if (timestamp <= lastTimestamp) {
-		timestamp = lastTimestamp + 1n;
+		timestamp = 2n * lastTimestamp - timestamp;
 	}
 
 	lastTimestamp = timestamp;

@@ -177,7 +177,7 @@ DMRouter.post(
 				content: result.content,
 				embeds: result.embeds,
 				system: result.system,
-				author: user as Omit<IUser, "email" | "password" | "token">,
+				author: user as Omit<IUser, "password" | "token">,
 				channelId: channelId,
 				hidden: result.hidden,
 			};

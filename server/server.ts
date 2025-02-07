@@ -11,7 +11,7 @@ import { AuthenticateToken, getUserFromToken } from "./functions/token";
 import APIRoute from "./routes/api";
 import loginRouter from "./routes/auth/login";
 import registerRouter from "./routes/auth/register";
-import { Errors, frontendOrigin } from "./constants";
+import { Errors } from "./constants";
 import path from "path";
 import {
 	WebSocketConnection,
@@ -50,7 +50,7 @@ app.use(function (_req, res, next) {
 });
 
 // only allow frontend site
-app.use(cors({ origin: frontendOrigin }));
+app.use(cors({ origin: "s.ily.cat" }));
 
 app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
@@ -88,8 +88,8 @@ mongoose
 	.then(() => console.log("Connected to DB"));
 
 // AUTH Routes
-app.use("auth/login", makeRateLimiter(20), loginRouter);
-app.use("auth/register", makeRateLimiter(10), registerRouter);
+app.use("/auth/login", makeRateLimiter(20), loginRouter);
+app.use("/auth/register", makeRateLimiter(10), registerRouter);
 
 // API Routes
 const APIMiddleware = async (
@@ -111,6 +111,7 @@ const APIMiddleware = async (
 		return next();
 	}
 };
+
 const APIReturner = async (_req: Request, res: Response) => {
 	const code: keyof typeof Errors = res.locals.status || "500";
 	const message = Errors[code];
@@ -237,14 +238,9 @@ io.on("connection", async (socket: Socket) => {
 		}
 	});
 
-	// Handle ping event
-	socket.on("ping", () => {
-		return socket.emit("pong");
-	});
-
 	// Set up the heartbeat and ping mechanism
 	function sendHeartbeat() {
-		socket.emit("heartbeat");
+		socket.emit("ping");
 	}
 
 	socket.on("pong", async () => {
@@ -263,6 +259,7 @@ io.on("connection", async (socket: Socket) => {
 	// Handle client disconnection
 	socket.on("disconnect", () => {
 		console.log("Client disconnected:", socket.id);
+		wsConnections.delete(connection.id);
 	});
 });
 
@@ -278,4 +275,4 @@ setInterval(() => {
 			}
 		}
 	}
-}, 30000);
+}, 30 * 1000);

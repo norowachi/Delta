@@ -1,7 +1,6 @@
 import express, { Response } from "express";
 import { getUserFromToken } from "../../functions/token";
 import { getUserById } from "../../database/functions/user";
-import protect from "../../functions/protectEmail";
 import { makeRateLimiter } from "../../functions/utility";
 
 const usersRouter = express.Router();
@@ -30,10 +29,9 @@ usersRouter.get(
 			res.locals.json = {
 				id: user.id,
 				username: user.username,
-				discriminator: user.discriminator,
+				handle: user.handle,
 				avatar: user.avatar,
 				roles: user.roles,
-				email: protect(user.email),
 				password: "*".repeat(user.password.length),
 				disabled: user.disabled,
 				deleted: user.deleted,
@@ -53,7 +51,7 @@ usersRouter.get(
 		res.locals.json = {
 			id: user.id,
 			username: user.username,
-			discriminator: user.discriminator,
+			handle: user.handle,
 			avatar: user.avatar,
 			roles: user.roles,
 			disabled: user.disabled,
