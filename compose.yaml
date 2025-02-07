@@ -1,20 +1,20 @@
 services:
-  server:
+  delta:
     build:
       context: .
+    container_name: delta
     environment:
       NODE_ENV: production
     ports:
-      - 7831:7831
+      - 127.0.0.1:7831:7831
     depends_on:
       mongo:
         condition: service_healthy
 
   mongo:
     image: mongodb/mongodb-community-server:7.0.9-ubi8
-    container_name: mongo
-    ports:
-      - 127.0.0.1:27017:27017
+    expose:
+      - 27017
     volumes:
       - data:/data/db
       - config:/data/configdb
