@@ -1,6 +1,6 @@
-import { generateSnowflakeID } from "../../functions/uid";
-import { IChannel, IGuild } from "../../interfaces";
-import { Guild } from "../schema/guild";
+import { generateSnowflakeID } from "../../functions/uid.js";
+import { IChannel, IGuild } from "../../interfaces.js";
+import { Guild } from "../schema/guild.js";
 
 export const getGuildById = async (guildId: string) => {
 	const guild = await Guild.findOne({ id: guildId });

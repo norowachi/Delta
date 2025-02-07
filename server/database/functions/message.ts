@@ -1,7 +1,7 @@
-import { IEmbed, IMessage, IUser } from "../../interfaces";
-import { Message } from "../schema/message";
-import { generateSnowflakeID } from "../../functions/uid";
-import { User } from "../schema/user";
+import { IEmbed, IUser } from "../../interfaces.js";
+import { Message } from "../schema/message.js";
+import { generateSnowflakeID } from "../../functions/uid.js";
+import { User } from "../schema/user.js";
 import { FilterQuery, ProjectionType, QueryOptions } from "mongoose";
 
 export const getMessageById = async (messageId: string) => {

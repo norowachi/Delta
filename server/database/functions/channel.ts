@@ -1,6 +1,6 @@
-import { generateSnowflakeID } from "../../functions/uid";
-import { IChannel, IMessage } from "../../interfaces";
-import { Channel } from "../schema/channel";
+import { generateSnowflakeID } from "../../functions/uid.js";
+import { IChannel, IMessage } from "../../interfaces.js";
+import { Channel } from "../schema/channel.js";
 
 export const getChannelById = async (channelId: string) => {
 	const channel = await Channel.findOne({ id: channelId });

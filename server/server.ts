@@ -7,24 +7,21 @@ import cors from "cors";
 import { Server, Socket } from "socket.io";
 import mongoose from "mongoose";
 import { config } from "dotenv";
-import { AuthenticateToken, getUserFromToken } from "./functions/token";
-import APIRoute from "./routes/api";
-import loginRouter from "./routes/auth/login";
-import registerRouter from "./routes/auth/register";
-import { Errors } from "./constants";
+import { AuthenticateToken, getUserFromToken } from "./functions/token.js";
+import APIRoute from "./routes/api/index.js";
+import loginRouter from "./routes/auth/login.js";
+import registerRouter from "./routes/auth/register.js";
+import { env, Errors } from "./constants.js";
 import path from "path";
 import {
 	WebSocketConnection,
 	WebSocketEvent,
 	WebSocketOP,
-} from "./websocketEvents";
-import { delay, makeRateLimiter } from "./functions/utility";
-import { getMessages } from "./database/functions/message";
-import { getChannelById } from "./database/functions/channel";
-import { getGuildById } from "./database/functions/guild";
-
-// Set up environment variables
-config();
+} from "./websocketEvents.js";
+import { delay, makeRateLimiter } from "./functions/utility.js";
+import { getMessages } from "./database/functions/message.js";
+import { getChannelById } from "./database/functions/channel.js";
+import { getGuildById } from "./database/functions/guild.js";
 
 // Initialize Express app
 const app = express();
@@ -57,7 +54,7 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 
 // initializing mongodb store
 const store = new (MongoDBStore(session))({
-	uri: process.env.MONGODB_URI!,
+	uri: env.MONGODB_URL,
 	collection: "Sessions",
 });
 
@@ -69,7 +66,7 @@ store.on("error", function (error) {
 // creating session parser
 const sessionParser = session({
 	store: store,
-	secret: process.env.SESSION_SECRET!,
+	secret: env.SESSION_SECRET!,
 	resave: false,
 	saveUninitialized: false,
 	cookie: {
@@ -83,9 +80,7 @@ app.use(sessionParser);
 app.use(cookieParser());
 
 // MongoDB connection setup
-mongoose
-	.connect(process.env.MONGODB_URI!)
-	.then(() => console.log("Connected to DB"));
+mongoose.connect(env.MONGODB_URL!).then(() => console.log("Connected to DB"));
 
 // AUTH Routes
 app.use("/auth/login", makeRateLimiter(20), loginRouter);
@@ -124,8 +119,8 @@ const APIReturner = async (_req: Request, res: Response) => {
 app.use("/api", APIMiddleware, APIRoute, APIReturner);
 
 // Socket.io server setup
-const server = app.listen(process.env.PORT!, () => {
-	console.log("Server is running on port " + process.env.PORT);
+const server = app.listen(env.PORT!, () => {
+	console.log("Server is running on port " + env.PORT);
 });
 
 // saving socket connections

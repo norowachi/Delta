@@ -1,7 +1,7 @@
 import express, { Response } from "express";
-import { getUserFromToken } from "../../functions/token";
-import { getUserById } from "../../database/functions/user";
-import { makeRateLimiter } from "../../functions/utility";
+import { getUserFromToken } from "../../functions/token.js";
+import { getUserById } from "../../database/functions/user.js";
+import { makeRateLimiter } from "../../functions/utility.js";
 
 const usersRouter = express.Router();
 

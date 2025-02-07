@@ -1,8 +1,8 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { AuthenticateToken, generateAuthToken } from "../../functions/token";
-import { User } from "../../database/schema/user";
-import { IUser } from "../../interfaces";
+import { AuthenticateToken, generateAuthToken } from "../../functions/token.js";
+import { User } from "../../database/schema/user.js";
+import { IUser } from "../../interfaces.js";
 
 const loginRouter = express.Router();
 

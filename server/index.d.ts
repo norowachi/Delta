@@ -1,5 +1,5 @@
 import "express";
-import { Errors } from "./constants";
+import { Errors } from "./constants.js";
 
 interface MyLocals {
 	status?: keyof typeof Errors;

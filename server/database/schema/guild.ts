@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { IGuild } from "../../interfaces";
+import { IGuild } from "../../interfaces.js";
 
 const GuildSchema = new mongoose.Schema<IGuild>({
 	id: { type: String, required: true },

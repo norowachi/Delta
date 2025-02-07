@@ -1,7 +1,7 @@
 import express from "express";
-import users from "./users";
-import guilds from "./guilds";
-import DMRouter from "./DM";
+import users from "./users.js";
+import guilds from "./guilds.js";
+import DMRouter from "./DM.js";
 
 const APIRouter = express.Router();
 

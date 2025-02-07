@@ -1,6 +1,6 @@
 import express, { Response } from "express";
-import { createGuild } from "../../../database/functions/guild";
-import { makeRateLimiter } from "../../../functions/utility";
+import { createGuild } from "../../../database/functions/guild.js";
+import { makeRateLimiter } from "../../../functions/utility.js";
 
 const guildCreateRouter = express.Router();
 

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { IChannel } from "../../interfaces";
+import { IChannel } from "../../interfaces.js";
 
 const ChannelsSchema = new mongoose.Schema<IChannel>({
 	id: { type: String, required: true },

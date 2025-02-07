@@ -1,8 +1,8 @@
 import jose from "node-jose";
-import { IUser, TokenPayload } from "../interfaces";
-import { getUserById } from "../database/functions/user";
-import { EPOCH } from "./uid";
-import { getKeys, addKey } from "../database/functions/keys";
+import { TokenPayload } from "../interfaces.js";
+import { getUserById } from "../database/functions/user.js";
+import { EPOCH } from "./uid.js";
+import { getKeys, addKey } from "../database/functions/keys.js";
 
 // Encrypts the payload using JWE
 const encryptPayload = async (payload: any): Promise<string> => {

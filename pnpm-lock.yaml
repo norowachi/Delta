@@ -30,8 +30,8 @@ importers:
         specifier: ^4.21.2
         version: 4.21.2
       express-rate-limit:
-        specifier: ^6.11.2
-        version: 6.11.2(express@4.21.2)
+        specifier: ^7.5.0
+        version: 7.5.0(express@4.21.2)
       express-session:
         specifier: ^1.18.1
         version: 1.18.1
@@ -661,11 +661,11 @@ packages:
     resolution: {integrity: sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==}
     engines: {node: '>= 0.6'}
 
-  express-rate-limit@6.11.2:
-    resolution: {integrity: sha512-a7uwwfNTh1U60ssiIkuLFWHt4hAC5yxlLGU2VP0X4YNlyEDZAqF4tK3GD3NSitVBrCQmQ0++0uOyFOgC2y4DDw==}
-    engines: {node: '>= 14'}
+  express-rate-limit@7.5.0:
+    resolution: {integrity: sha512-eB5zbQh5h+VenMPM3fh+nw1YExi5nMr6HUCR62ELSP11huvxm/Uir1H1QEyTkk5QX6A58pX6NmaTMceKZ0Eodg==}
+    engines: {node: '>= 16'}
     peerDependencies:
-      express: ^4 || ^5
+      express: ^4.11 || 5 || ^5.0.0-beta.1
 
   express-session@1.18.1:
     resolution: {integrity: sha512-a5mtTqEaZvBCL9A9aqkrtfz+3SMDhOVUnjafjo+s7A9Txkq+SVX2DLvSp1Zrv4uCXa3lMSK3viWnh9Gg07PBUA==}
@@ -2219,7 +2219,7 @@ snapshots:
 
   etag@1.8.1: {}
 
-  express-rate-limit@6.11.2(express@4.21.2):
+  express-rate-limit@7.5.0(express@4.21.2):
     dependencies:
       express: 4.21.2
 

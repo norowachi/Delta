@@ -1,7 +1,7 @@
 import express, { Response } from "express";
-import { getGuildById } from "../../../database/functions/guild";
-import { getUserFromToken } from "../../../functions/token";
-import { makeRateLimiter } from "../../../functions/utility";
+import { getGuildById } from "../../../database/functions/guild.js";
+import { getUserFromToken } from "../../../functions/token.js";
+import { makeRateLimiter } from "../../../functions/utility.js";
 
 const MembersRouter = express.Router();
 

@@ -1,4 +1,4 @@
-import { Roles, Role } from "../constants";
+import { Roles, Role } from "../constants.js";
 
 export const getRolesFromValue = (value: number): Role[] => {
 	const roles: Role[] = [];

@@ -1,5 +1,5 @@
 import jose from "node-jose";
-import { Keys } from "../schema/keys";
+import { Keys } from "../schema/keys.js";
 
 export const getKeys = async (): Promise<jose.JWK.Key[] | null> => {
 	const keys = await Keys.find();

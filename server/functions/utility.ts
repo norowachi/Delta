@@ -1,5 +1,5 @@
 import rateLimit from "express-rate-limit";
-import { Errors } from "../constants";
+import { Errors } from "../constants.js";
 
 /** Delay function
  *

@@ -1,13 +1,13 @@
 // Direct Messages
 import express, { Response } from "express";
-import { getUserFromToken } from "../../functions/token";
+import { getUserFromToken } from "../../functions/token.js";
 import {
 	getChannelById,
 	getChannelMessages,
-} from "../../database/functions/channel";
-import { ChannelTypes, IUser } from "../../interfaces";
-import { createMessage } from "../../database/functions/message";
-import { makeRateLimiter } from "../../functions/utility";
+} from "../../database/functions/channel.js";
+import { ChannelTypes, IUser } from "../../interfaces.js";
+import { createMessage } from "../../database/functions/message.js";
+import { makeRateLimiter } from "../../functions/utility.js";
 
 const DMRouter = express.Router();
 

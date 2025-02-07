@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { IEmbed, IMessage } from "../../interfaces";
+import { IEmbed, IMessage } from "../../interfaces.js";
 
 const EmbedSchema = new mongoose.Schema<IEmbed>({
 	title: { type: String, required: true },

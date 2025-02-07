@@ -1,8 +1,8 @@
-import { env } from "../../constants";
-import { generateAuthToken } from "../../functions/token";
-import { generateSnowflakeID } from "../../functions/uid";
-import { IUser } from "../../interfaces";
-import { User } from "../schema/user";
+import { env } from "../../constants.js";
+import { generateAuthToken } from "../../functions/token.js";
+import { generateSnowflakeID } from "../../functions/uid.js";
+import { IUser } from "../../interfaces.js";
+import { User } from "../schema/user.js";
 
 export const getUserById = async (userId: string) => {
 	const user = await User.findOne({ id: userId });

@@ -1,7 +1,7 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { User } from "../../database/schema/user";
-import { createUser } from "../../database/functions/user";
+import { User } from "../../database/schema/user.js";
+import { createUser } from "../../database/functions/user.js";
 
 const registerRouter = express.Router();
 

@@ -1,15 +1,15 @@
 import { config } from "dotenv";
-import { IUser } from "./interfaces";
+import { IUser } from "./interfaces.js";
 import { join } from "path";
 
 config({
-	path: join(import.meta.dirname, ".env"),
+	path: join(import.meta.dirname, "..", ".env"),
 });
 
 export const env = {
 	MONGODB_URL: "mongodb://localhost:27017/delta",
 	SESSION_SECRET: process.env.SESSION_SECRET,
-	PORT: process.env.PORT,
+	PORT: process.env.PORT || 7831,
 	API_ORIGIN: process.env.API_ORIGIN,
 };
 
