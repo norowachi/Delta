@@ -23,7 +23,7 @@ export type Role = keyof typeof Roles;
 
 export const Delta: IUser = {
 	id: "0",
-	username: "Delta",
+	username: "delta",
 	handle: "delta",
 	bot: true,
 	roles: Roles.STAFF | Roles.BOT | Roles.VERIFIED,
