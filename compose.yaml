@@ -2,6 +2,7 @@ services:
   delta:
     build:
       context: .
+    env_file: ".env"
     container_name: delta
     environment:
       NODE_ENV: production
@@ -13,6 +14,7 @@ services:
 
   mongo:
     image: mongodb/mongodb-community-server:7.0.9-ubi8
+    container_name: delta-mongo
     expose:
       - 27017
     volumes:

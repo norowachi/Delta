@@ -32,7 +32,9 @@ app.use(express.json());
 // stored images
 app.use(express.static(path.resolve("./public")));
 
-app.set("trust proxy", true);
+app.set("trust proxy", 1);
+app.get('/ip', (request, response) => response.send(request.ip))
+
 
 app.use(function (_req, res, next) {
 	res.header("Access-Control-Allow-Credentials", "true");

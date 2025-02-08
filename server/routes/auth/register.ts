@@ -16,7 +16,7 @@ registerRouter.post("/", async (req, res) => {
 			return res.status(409).json({ message: "Username taken." });
 
 		//! default handle
-		const handle = `${username}.delta.noro.cc`;
+		const handle = `${username}@delta.noro.cc`;
 
 		// Hash the password
 		const hashedPassword = await bcrypt.hash(password, 10);

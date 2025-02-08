@@ -34,7 +34,7 @@ export const createUser = async (
 			id: id,
 			username: data.username,
 			handle: data.handle,
-			avatar: `https://${env.API_ORIGIN}/images/delta-${parseInt(id) % 5}.png`,
+			avatar: `https://${env.API_ORIGIN}/images/delta-${parseInt(id.slice(1)) % 5}.png`,
 			roles: 0,
 			password: data.password,
 			disabled: false,
