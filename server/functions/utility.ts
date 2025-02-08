@@ -1,5 +1,5 @@
 import rateLimit from "express-rate-limit";
-import { Errors } from "../constants.js";
+import { Status } from "../constants.js";
 
 /** Delay function
  *
@@ -17,5 +17,5 @@ export const makeRateLimiter = (allowedRequestsPerMinute: number) =>
 	rateLimit({
 		windowMs: 60 * 1000,
 		max: allowedRequestsPerMinute,
-		handler: (_req, res) => res.status(429).json({ message: Errors["429"] }),
+		handler: (_req, res) => res.status(429).json({ message: Status["429"] }),
 	});

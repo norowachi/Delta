@@ -36,7 +36,7 @@ export const Delta: IUser = {
 	guilds: [],
 };
 
-export const Errors = {
+export const Status = {
 	"100": "Continue",
 	"101": "Switching Protocols",
 	"102": "Processing",

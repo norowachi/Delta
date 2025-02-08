@@ -1,8 +1,8 @@
 import "express";
-import { Errors } from "./constants.js";
+import { Status } from "./constants.js";
 
 interface MyLocals {
-	status?: keyof typeof Errors;
+	status?: keyof typeof Status;
 	token?: string;
 	json?: any;
 }

@@ -1,26 +1,40 @@
 import jose from "node-jose";
 import { Keys } from "../schema/keys.js";
 
-export const getKeys = async (): Promise<jose.JWK.Key[] | null> => {
-	const keys = await Keys.find();
-	if (!keys) return null;
-	return keys as jose.JWK.Key[];
+export const rotateKey = async () => {
+	const keystore = jose.JWK.createKeyStore();
+	const newKey = await keystore.generate("oct", 256, {
+		alg: "A256GCM",
+		use: "enc",
+	});
+
+	const result = await Keys.create({
+		kid: newKey.kid,
+		kdata: JSON.stringify(newKey.toJSON(true)),
+	});
+
+	console.log("New encryption key generated:", newKey.kid);
+	return result;
 };
 
-export const addKey = async (key: jose.JWK.Key) => {
+export const getKeystore = async () => {
 	try {
-		const newKey = new Keys({
-			keystore: key.keystore,
-			length: key.length,
-			kty: key.kty,
-			kid: key.kid,
-			use: key.use,
-			alg: key.alg,
-		});
-		newKey.save();
-		return true;
+		const keys = await Keys.find().sort({ createdAt: -1 });
+		const keystore = jose.JWK.createKeyStore();
+
+		if (!keys.length) {
+			const key = await rotateKey();
+			const data = await jose.JWK.asKey(JSON.parse(key.kdata!), "json");
+			await keystore.add(data);
+		} else {
+			for (const key of keys) {
+				const data = await jose.JWK.asKey(JSON.parse(key.kdata!), "json");
+				await keystore.add(data);
+			}
+		}
+
+		return keystore;
 	} catch (err) {
-		console.error("Cannot save key:", err);
-		return false;
+		throw err;
 	}
 };

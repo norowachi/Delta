@@ -17,12 +17,14 @@ services:
     container_name: delta-mongo
     expose:
       - 27017
+    ports:
+      - 100.80.20.80:27888:27017
     volumes:
       - data:/data/db
       - config:/data/configdb
     restart: unless-stopped
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/delta --quiet
       interval: 10s
       timeout: 10s
       retries: 3

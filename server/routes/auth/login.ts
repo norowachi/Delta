@@ -3,13 +3,14 @@ import bcrypt from "bcrypt";
 import { AuthenticateToken, generateAuthToken } from "../../functions/token.js";
 import { User } from "../../database/schema/user.js";
 import { IUser } from "../../interfaces.js";
+import { Status } from "../../constants.js";
 
 const loginRouter = express.Router();
 
 // Login route
 loginRouter.post("/", async (req, res) => {
-	const { username, password, handle } = req.body;
-	if (!username || !password || !handle) {
+	const { username, handle, password } = req.body;
+	if ((!username && !handle) || !password) {
 		return res.status(400).json({ message: "Invalid credentials" });
 	}
 
@@ -31,11 +32,11 @@ loginRouter.post("/", async (req, res) => {
 		if (!(await AuthenticateToken(user.token))) {
 			token = await generateAuthToken(user.id, user.handle, user.password);
 		}
-		console.log(token);
-		res.status(200).json({ token });
+
+		res.status(200).json({ token, message: "Logged in successfully" });
 	} catch (error) {
 		console.error("Error logging in user:", error);
-		res.sendStatus(500);
+		res.status(500).json({ message: Status[500] });
 	}
 });
 
