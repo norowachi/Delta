@@ -1,17 +1,13 @@
 import bodyParser from "body-parser";
-import cookieParser from "cookie-parser";
 import express, { NextFunction, Request, Response } from "express";
-import session from "express-session";
-import MongoDBStore from "connect-mongodb-session";
 import cors from "cors";
 import { Server, Socket } from "socket.io";
 import mongoose from "mongoose";
-import { config } from "dotenv";
 import { AuthenticateToken, getUserFromToken } from "./functions/token.js";
 import APIRoute from "./routes/api/index.js";
 import loginRouter from "./routes/auth/login.js";
 import registerRouter from "./routes/auth/register.js";
-import { env, Errors } from "./constants.js";
+import { env, Status } from "./constants.js";
 import path from "path";
 import {
 	WebSocketConnection,
@@ -32,7 +28,8 @@ app.use(express.json());
 // stored images
 app.use(express.static(path.resolve("./public")));
 
-app.set("trust proxy", true);
+app.set("trust proxy", 1);
+app.get("/ip", (request, response) => response.send(request.ip));
 
 app.use(function (_req, res, next) {
 	res.header("Access-Control-Allow-Credentials", "true");
@@ -52,33 +49,6 @@ app.use(cors({ origin: "s.ily.cat" }));
 app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 
-// initializing mongodb store
-const store = new (MongoDBStore(session))({
-	uri: env.MONGODB_URL,
-	collection: "Sessions",
-});
-
-// Catch errors
-store.on("error", function (error) {
-	console.error(error);
-});
-
-// creating session parser
-const sessionParser = session({
-	store: store,
-	secret: env.SESSION_SECRET!,
-	resave: false,
-	saveUninitialized: false,
-	cookie: {
-		secure: true,
-		maxAge: 7 * 24 * 60 * 60 * 1000,
-	},
-});
-
-// using session & cookie parser
-app.use(sessionParser);
-app.use(cookieParser());
-
 // MongoDB connection setup
 mongoose.connect(env.MONGODB_URL!).then(() => console.log("Connected to DB"));
 
@@ -94,7 +64,7 @@ const APIMiddleware = async (
 ) => {
 	const [type, token] = req.header("authorization")?.split(" ") || [];
 	if (type.length > 0 && type !== "Bearer") {
-		return res.status(401).json({ message: Errors["401"] });
+		return res.status(401).json({ message: Status["401"] });
 	}
 
 	const isAuthenticated = await AuthenticateToken(token);
@@ -108,8 +78,8 @@ const APIMiddleware = async (
 };
 
 const APIReturner = async (_req: Request, res: Response) => {
-	const code: keyof typeof Errors = res.locals.status || "500";
-	const message = Errors[code];
+	const code: keyof typeof Status = res.locals.status || "500";
+	const message = Status[code];
 
 	return res
 		.status(parseInt(code))

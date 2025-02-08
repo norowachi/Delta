@@ -7,7 +7,7 @@ config({
 });
 
 export const env = {
-	MONGODB_URL: "mongodb://localhost:27017/delta",
+	MONGODB_URL: "mongodb://delta-mongo:27017/delta",
 	SESSION_SECRET: process.env.SESSION_SECRET,
 	PORT: process.env.PORT || 7831,
 	API_ORIGIN: process.env.API_ORIGIN,
@@ -36,7 +36,7 @@ export const Delta: IUser = {
 	guilds: [],
 };
 
-export const Errors = {
+export const Status = {
 	"100": "Continue",
 	"101": "Switching Protocols",
 	"102": "Processing",

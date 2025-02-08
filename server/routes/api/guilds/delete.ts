@@ -4,9 +4,9 @@ import { getUserFromToken } from "../../../functions/token.js";
 import { Guild } from "../../../database/schema/guild.js";
 import { makeRateLimiter } from "../../../functions/utility.js";
 
-const guildCreateRouter = express.Router();
+const guildDeleteRouter = express.Router();
 
-guildCreateRouter.delete(
+guildDeleteRouter.delete(
 	"/:guildId",
 	makeRateLimiter(5),
 	async (req, res: Response, next) => {

@@ -30,23 +30,30 @@ export const createUser = async (
 ) => {
 	try {
 		const id = generateSnowflakeID("u");
+		const token = await generateAuthToken(id, data.handle, data.password);
+
+		console.log(id, token);
+
 		const user = new User<IUser>({
-			id: id,
+			id,
 			username: data.username,
 			handle: data.handle,
-			avatar: `https://${env.API_ORIGIN}/images/delta-${parseInt(id) % 5}.png`,
+			avatar: `https://${env.API_ORIGIN}/images/delta-${
+				parseInt(id.slice(1)) % 5
+			}.png`,
 			roles: 0,
 			password: data.password,
 			disabled: false,
 			deleted: false,
 			bot: false,
 			system: false,
-			token: await generateAuthToken(id, data.handle, data.password),
+			token,
 			guilds: [], //TODO: add the base - in this case "townhall" guild id
 		});
 		await user.save();
 		return user;
 	} catch (err) {
+		console.error(err);
 		return null;
 	}
 };

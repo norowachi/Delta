@@ -25,4 +25,4 @@ const ChannelsSchema = new mongoose.Schema<IChannel>({
 	],
 });
 
-export const Channel = mongoose.model<IChannel>("Channel", ChannelsSchema);
+export const Channel = mongoose.model<IChannel>("channel", ChannelsSchema);

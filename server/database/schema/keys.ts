@@ -1,13 +1,9 @@
 import mongoose from "mongoose";
-import jose from "node-jose";
 
-const KeySchema = new mongoose.Schema<jose.JWK.Key>({
-	keystore: { type: Object, required: true },
-	length: { type: Number, required: true },
-	kty: { type: String, required: true },
-	kid: { type: String, required: true },
-	use: { type: String, required: true },
-	alg: { type: String, required: true },
+const KeySchema = new mongoose.Schema({
+	kid: { type: Object, required: true },
+	kdata: String,
+	createdAt: { type: Date, default: Date.now, expires: "7d" },
 });
 
-export const Keys = mongoose.model<jose.JWK.Key>("Keystore", KeySchema);
+export const Keys = mongoose.model("keystore", KeySchema);

@@ -18,4 +18,4 @@ const GuildSchema = new mongoose.Schema<IGuild>({
 	deleted: { type: Boolean, required: false },
 });
 
-export const Guild = mongoose.model<IGuild>("Guild", GuildSchema);
+export const Guild = mongoose.model<IGuild>("guild", GuildSchema);

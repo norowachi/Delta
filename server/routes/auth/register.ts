@@ -2,36 +2,55 @@ import express from "express";
 import bcrypt from "bcrypt";
 import { User } from "../../database/schema/user.js";
 import { createUser } from "../../database/functions/user.js";
+import { Status } from "../../constants.js";
+import { IUser } from "../../interfaces.js";
 
 const registerRouter = express.Router();
 
 // Register route
 registerRouter.post("/", async (req, res) => {
-	const { username, password } = req.body;
+	let {
+		username,
+		handle,
+		password,
+	}: Pick<IUser, "username" | "password"> & Partial<Pick<IUser, "handle">> =
+		req.body;
+	if (!username || !password)
+		return res.status(400).json({ message: "Invalid credentials" });
+
+	username = username.toLowerCase();
+	handle ||= `${username}@delta.noro.cc`;
+
 	try {
-		const usernameCheck = /^(?![-_.])[a-zA-Z0-9-_.]{3,32}$/gi.test(username);
+		const usernameCheck = /^(?![-_.])[a-z0-9-_.]{3,32}$/gi.test(username);
 		if (!usernameCheck)
 			return res.status(400).json({ message: "Invalid username." });
-		if (await User.findOne({ username }))
-			return res.status(409).json({ message: "Username taken." });
+		if (await User.findOne<IUser>({ $or: [{ username }, { handle }] }))
+			return res.status(409).json({ message: "Username or handle taken." });
 
 		//! default handle
-		const handle = `${username}.delta.noro.cc`;
+		handle ||= `${username}@delta.noro.cc`;
 
 		// Hash the password
 		const hashedPassword = await bcrypt.hash(password, 10);
 
 		// Create a new user
-		await createUser({
+		const user = await createUser({
 			username: username,
 			handle: handle,
 			roles: 0,
 			password: hashedPassword,
 		});
 
-		res.status(201).json({ message: "User registered successfully" });
+		console.log(user);
+		if (!user) return res.status(500).json({ message: Status[500] });
+
+		res
+			.status(201)
+			.json({ token: user.token, message: "Registered successfully" });
 	} catch (error) {
-		res.status(500).json({ message: "Internal server error" });
+		console.error(error);
+		res.status(500).json({ message: Status[500] });
 	}
 });
 

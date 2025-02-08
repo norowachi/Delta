@@ -4,36 +4,25 @@
 	"description": "",
 	"main": "dist/server.js",
 	"type": "module",
-	"dependencies": {
-		"bcrypt": "^5.1.1",
-		"body-parser": "^1.20.3",
-		"connect-mongodb-session": "^3.1.1",
-		"cookie-parser": "^1.4.7",
-		"cors": "^2.8.5",
-		"dotenv": "^16.4.7",
-		"express": "^4.21.2",
-		"express-rate-limit": "^7.5.0",
-		"express-session": "^1.18.1",
-		"mongoose": "^8.10.0",
-		"node-jose": "^2.2.0",
-		"path": "^0.12.7",
-		"socket.io": "^4.8.1"
-	},
+	"author": "Noro95",
+	"license": "UNLICENSED",
 	"scripts": {
 		"start": "node dist/server.js",
 		"build": "tsc",
 		"test": "ts-node server/server.ts"
 	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/Noro95/Delta.git"
+	"dependencies": {
+		"bcrypt": "^5.1.1",
+		"body-parser": "^1.20.3",
+		"cors": "^2.8.5",
+		"dotenv": "^16.4.7",
+		"express": "^4.21.2",
+		"express-rate-limit": "^7.5.0",
+		"mongoose": "^8.10.0",
+		"node-jose": "^2.2.0",
+		"path": "^0.12.7",
+		"socket.io": "^4.8.1"
 	},
-	"author": "Noro95",
-	"license": "UNLICENSED",
-	"bugs": {
-		"url": "https://github.com/Noro95/Delta/issues"
-	},
-	"homepage": "https://github.com/Noro95/Delta#readme",
 	"devDependencies": {
 		"@types/bcrypt": "^5.0.2",
 		"@types/body-parser": "^1.19.5",
@@ -46,5 +35,13 @@
 		"@types/node-jose": "^1.1.13",
 		"typescript": "^5.7.3"
 	},
-	"packageManager": "pnpm@9.15.4"
+	"packageManager": "pnpm@9.15.4",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Noro95/Delta.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Noro95/Delta/issues"
+	},
+	"homepage": "https://github.com/Noro95/Delta#readme"
 }
