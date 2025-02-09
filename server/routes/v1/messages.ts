@@ -5,10 +5,7 @@ import {
 } from "../../database/functions/guild.js";
 import { getUserFromToken } from "../../functions/token.js";
 import { makeRateLimiter } from "../../functions/utility.js";
-import {
-	getMessageById,
-	getMessages,
-} from "../../database/functions/message.js";
+import { getMessageById } from "../../database/functions/message.js";
 import { IMessage } from "../../interfaces.js";
 import {
 	getChannelById,
@@ -30,7 +27,7 @@ messagesRouter.get(
 		const guildId = req.params.guildId;
 		const channelId = req.params.channelId;
 		// the messages' page
-		const page = req.query.page;
+		const page = Number(req.query.page) || 1;
 		const guild = await getGuildById(guildId);
 		const channel = await getChannelById(channelId);
 
@@ -60,16 +57,6 @@ messagesRouter.get(
 
 		// 100 messages per page
 		let multip = 100;
-		if (!page || typeof page !== "number" || parseInt(page) === 0) {
-			// returns max 100 messages
-			res.locals.status = "200";
-			res.locals.json = {
-				currentPage: 1,
-				pages: Math.ceil(messages.length / multip), // max pages
-				messages: messages?.map((m) => m).slice(0, multip),
-			};
-			return next();
-		}
 
 		// return the messages per page
 		res.locals.status = "200";
@@ -77,7 +64,20 @@ messagesRouter.get(
 			currentPage: page,
 			pages: Math.ceil(messages.length / multip), // max pages
 			messages: messages
-				?.map((m) => m)
+				?.map(
+					(m) =>
+						({
+							id: m.id,
+							content: m.content,
+							embeds: m.embeds,
+							system: m.system,
+							author: m.author,
+							channelId: m.channelId,
+							guildId: m.guildId,
+							ephemeral: m.ephemeral,
+							createdAt: m.createdAt,
+						} as IMessage)
+				)
 				.slice((page - 1) * multip, page * multip),
 		};
 		return next();
@@ -115,7 +115,17 @@ messagesRouter.get(
 
 		// User is a member, return all data needed
 		res.locals.status = "200";
-		res.locals.json = message as IMessage;
+		res.locals.json = {
+			id: message.id,
+			content: message.content,
+			embeds: message.embeds,
+			system: message.system,
+			author: message.author,
+			channelId: message.channelId,
+			guildId: message.guildId,
+			ephemeral: message.ephemeral,
+			createdAt: message.createdAt,
+		} as IMessage;
 	}
 );
 

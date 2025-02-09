@@ -1,8 +1,9 @@
-import { IEmbed, IMessage, IUser } from "../../interfaces.js";
+import { IChannel, IEmbed, IMessage, IUser } from "../../interfaces.js";
 import { Message } from "../schema/message.js";
 import { generateSnowflakeID } from "../../functions/uid.js";
 import { User } from "../schema/user.js";
 import { Document, FilterQuery, ProjectionType, QueryOptions } from "mongoose";
+import { Channel } from "../schema/channel.js";
 
 export const getMessageById = async ({
 	guildId = "@me",
@@ -60,6 +61,12 @@ export const createMessage = async (data: {
 		ephemeral: author.bot ? data.ephemeral : false,
 		readBy: [author._id],
 	});
+
+	await Channel.updateOne<IChannel>(
+		{ id: data.channelId },
+		{ $push: { messages: newMessage._id } }
+	);
+
 	newMessage.save();
 	return newMessage;
 };

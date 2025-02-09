@@ -200,6 +200,8 @@ io.on("connection", async (socket: Socket) => {
 	});
 
 	socket.on("join", async (rooms: string[]) => {
+		if (!rooms || !rooms.length || !Array.isArray(rooms)) return;
+
 		const RequestedChannels = rooms.filter((room) => room.startsWith("c"));
 		const RequestedGuilds = rooms.filter((room) => room.startsWith("g"));
 

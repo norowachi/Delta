@@ -5,7 +5,6 @@ import { IMessage } from "../../../interfaces.js";
 import { getUserFromToken } from "../../../functions/token.js";
 import io from "../../../server.js";
 import { WebSocketEvent, WebSocketOP } from "../../../websocketEvents.js";
-import { getGuildChannels } from "../../../database/functions/guild.js";
 import { getChannelById } from "../../../database/functions/channel.js";
 
 const messageCreateRouter = express.Router();
@@ -16,7 +15,7 @@ const messageCreateRouter = express.Router();
 */
 messageCreateRouter.post(
 	"/:guildId/:channelId/messages",
-	makeRateLimiter(8 * 60),
+	makeRateLimiter(300),
 	async (req, res: Response, next) => {
 		if (!res.locals.token) {
 			res.locals.status = "401";
@@ -81,16 +80,16 @@ messageCreateRouter.post(
 			id: result.id,
 			content: result.content,
 			embeds: result.embeds,
-			author: result.author,
+			author: user.id,
 			channelId: result.channelId,
 			guildId: result.guildId,
 			ephemeral: result.ephemeral,
-			readBy: result.readBy,
+			createdAt: result.createdAt,
 		} as IMessage;
 
 		io.to([result.guildId, result.channelId]).emit("message", {
 			op: WebSocketOP.MESSAGE_CREATE,
-			d: result,
+			d: res.locals.json,
 		} as WebSocketEvent);
 
 		return next();

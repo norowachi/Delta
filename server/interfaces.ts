@@ -28,11 +28,12 @@ export interface IMessage {
 	content: string;
 	embeds: IEmbed[];
 	system: boolean;
-	author: Omit<IUser, "password" | "token">;
+	author: Omit<IUser, "password" | "token" | "guilds">;
 	channelId: string;
 	guildId?: string | null;
 	ephemeral: boolean;
 	readBy: string[];
+	createdAt: Date;
 }
 
 export interface IEmbed {

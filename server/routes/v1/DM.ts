@@ -180,7 +180,7 @@ DMRouter.post(
 				content: result.content,
 				embeds: result.embeds,
 				system: result.system,
-				author: user as Omit<IUser, "password" | "token">,
+				author: user,
 				channelId: channelId,
 				hidden: result.ephemeral,
 			};

@@ -24,6 +24,7 @@ const MessagesSchema = new mongoose.Schema<IMessage>({
 	readBy: [
 		{ type: mongoose.Schema.Types.ObjectId, ref: "user", required: false },
 	],
+	createdAt: { type: Date, default: Date.now },
 });
 
 export const Message =

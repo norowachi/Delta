@@ -63,7 +63,7 @@ guildsRouter.get(
 		}
 		const guildId = req.params.guildId;
 		// the channels' page
-		const page = req.query.page;
+		const page = Number(req.query.page) || 1;
 		const guild = await getGuildById(guildId);
 
 		// invalid guildId or guild does not exsit, return bad request
@@ -79,6 +79,7 @@ guildsRouter.get(
 			res.locals.status = "401";
 			return next();
 		}
+		
 		// get all channels
 		const channels = await getGuildChannels(guildId);
 		// No channels, return internal error
@@ -86,28 +87,9 @@ guildsRouter.get(
 			res.locals.status = "500";
 			return next();
 		}
+
 		// 30 channels per page
 		let multip = 30;
-		if (!page || typeof page !== "number" || parseInt(page) === 0) {
-			// returns max 30 channels
-			res.locals.status = "200";
-			res.locals.json = {
-				currentPage: 1,
-				pages: Math.ceil(channels.length / multip), // max pages
-				channels: channels
-					?.map((c) => {
-						return {
-							id: c.id,
-							name: c.name,
-							stickyNessage: c.stickyMessage?.id,
-							messages: c.messages.map((m) => m.id).slice(0, 30), //return only 30 message id
-							members: c.members,
-						};
-					})
-					.slice(0, multip),
-			};
-			return next();
-		}
 
 		// return the channels per page
 		res.locals.status = "200";
