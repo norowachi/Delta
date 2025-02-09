@@ -61,7 +61,7 @@ messageCreateRouter.post(
 		}
 
 		// create the message
-		let result = await createMessage({
+		let result: IMessage = await createMessage({
 			content,
 			embeds,
 			author: user.id,
@@ -84,10 +84,13 @@ messageCreateRouter.post(
 			channelId: result.channelId,
 			guildId: result.guildId,
 			ephemeral: result.ephemeral,
+			system: result.system,
 			createdAt: result.createdAt,
-		} as IMessage;
+		};
 
-		io.to([result.guildId, result.channelId]).emit("message", {
+		io.to(
+			[result.guildId, result.channelId].filter((c) => typeof c === "string")
+		).emit("message", {
 			op: WebSocketOP.MESSAGE_CREATE,
 			d: res.locals.json,
 		} as WebSocketEvent);
