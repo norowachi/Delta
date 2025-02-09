@@ -14,7 +14,7 @@ import {
 	WebSocketEvent,
 	WebSocketOP,
 } from "./websocketEvents.js";
-import { delay, makeRateLimiter } from "./functions/utility.js";
+import { makeRateLimiter } from "./functions/utility.js";
 import { getMessages } from "./database/functions/message.js";
 import { getChannelById } from "./database/functions/channel.js";
 import { getGuildById } from "./database/functions/guild.js";
@@ -107,9 +107,11 @@ export const wsConnections: Map<
 const io = new Server(server);
 
 io.on("connection", async (socket: Socket) => {
-	console.log(`[Websocket]\tNew client connected in WS ${socket.id}`);
-	const [type, token] = socket.handshake.auth?.split(" ") || [];
-	if (type.length > 0 && type !== "Bearer") {
+	console.log(`[Websocket] New client connected in WS ${socket.id}`);
+	if (!socket.handshake.auth) return socket.disconnect(true);
+	const type: string | undefined = socket.handshake.auth.type || "Bearer";
+	const token: string | undefined = socket.handshake.auth.token || undefined;
+	if (type !== "Bearer" || !token) {
 		return socket.disconnect(true);
 	}
 
@@ -154,7 +156,7 @@ io.on("connection", async (socket: Socket) => {
 				wsConnections.set(id, connsForThisUser);
 
 				console.log(
-					`[Websocket]\tUser with ID ${id} connected in WS ${connection.ws}!`
+					`[Websocket] User with ID ${id} connected in WS ${connection.ws}!`
 				);
 
 				// Send unread messages count mapped by channel ids, if any
