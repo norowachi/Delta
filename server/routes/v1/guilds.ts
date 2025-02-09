@@ -92,7 +92,7 @@ guildsRouter.get(
 			// returns max 30 channels
 			res.locals.status = "200";
 			res.locals.json = {
-				currentPage: 2, // 60/multip = 60/30 = 2
+				currentPage: 1,
 				pages: Math.ceil(channels.length / multip), // max pages
 				channels: channels
 					?.map((c) => {
@@ -104,7 +104,7 @@ guildsRouter.get(
 							members: c.members,
 						};
 					})
-					.slice(0, 2 * multip),
+					.slice(0, multip),
 			};
 			return next();
 		}

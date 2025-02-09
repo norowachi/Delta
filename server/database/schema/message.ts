@@ -20,7 +20,7 @@ const MessagesSchema = new mongoose.Schema<IMessage>({
 	},
 	channelId: { type: String, required: false },
 	guildId: { type: String, required: false },
-	hidden: { type: Boolean, required: false },
+	ephemeral: { type: Boolean, required: false },
 	readBy: [
 		{ type: mongoose.Schema.Types.ObjectId, ref: "User", required: false },
 	],

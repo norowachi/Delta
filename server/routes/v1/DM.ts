@@ -5,7 +5,7 @@ import {
 	getChannelById,
 	getChannelMessages,
 } from "../../database/functions/channel.js";
-import { ChannelTypes, IUser } from "../../interfaces.js";
+import { ChannelTypes, IMessage, IUser } from "../../interfaces.js";
 import { createMessage } from "../../database/functions/message.js";
 import { makeRateLimiter } from "../../functions/utility.js";
 
@@ -101,7 +101,7 @@ DMRouter.get(
 							system: msg.system,
 							authorId: msg.author.id,
 							channelId: msg.channelId,
-							hidden: msg.hidden,
+							hidden: msg.ephemeral,
 						};
 					})
 					.slice(0, 3 * multip),
@@ -123,7 +123,7 @@ DMRouter.get(
 						system: msg.system,
 						authorId: msg.author.id,
 						channelId: msg.channelId,
-						hidden: msg.hidden,
+						hidden: msg.ephemeral,
 					};
 				})
 				.slice((page - 1) * multip, page * multip),
@@ -156,13 +156,16 @@ DMRouter.post(
 			return next();
 		}
 		try {
-			const { content, embeds, hidden } = JSON.parse(req.body);
+			const { content, embeds, ephemeral } = req.body as Pick<
+				IMessage,
+				"content" | "embeds" | "ephemeral"
+			>;
 			const result = await createMessage({
-				content: content,
-				embeds: embeds,
-				authorId: user.id,
-				channelId: channelId,
-				hidden: hidden,
+				content,
+				embeds,
+				author: user,
+				channelId,
+				ephemeral,
 				guildId: null,
 			});
 
@@ -179,7 +182,7 @@ DMRouter.post(
 				system: result.system,
 				author: user as Omit<IUser, "password" | "token">,
 				channelId: channelId,
-				hidden: result.hidden,
+				hidden: result.ephemeral,
 			};
 		} catch {
 			res.locals.status = "500";

@@ -3,7 +3,7 @@ import { IChannel, IMessage } from "../../interfaces.js";
 import { Channel } from "../schema/channel.js";
 
 export const getChannelById = async (channelId: string) => {
-	const channel = await Channel.findOne({ id: channelId });
+	const channel = await Channel.findOne<IChannel>({ id: channelId });
 	if (!channel) return null;
 	return channel;
 };

@@ -1,11 +1,23 @@
-import { IEmbed, IUser } from "../../interfaces.js";
+import { IEmbed, IMessage, IUser } from "../../interfaces.js";
 import { Message } from "../schema/message.js";
 import { generateSnowflakeID } from "../../functions/uid.js";
 import { User } from "../schema/user.js";
-import { FilterQuery, ProjectionType, QueryOptions } from "mongoose";
+import { Document, FilterQuery, ProjectionType, QueryOptions } from "mongoose";
 
-export const getMessageById = async (messageId: string) => {
-	const message = await Message.findOne({ id: messageId });
+export const getMessageById = async ({
+	guildId = "@me",
+	channelId,
+	messageId,
+}: {
+	guildId: string;
+	channelId: string;
+	messageId: string;
+}) => {
+	const message = await Message.findOne({
+		id: messageId,
+		guildId: guildId,
+		channelId: channelId,
+	});
 	if (!message) return null;
 	const author = (await message.populate("author")) as Omit<
 		IUser,
@@ -37,7 +49,7 @@ export const getMessagesById = async (messagesId: string[]) => {
 			>,
 			channelId: msg.channelId,
 			guildId: msg.guildId,
-			hidden: msg.hidden,
+			hidden: msg.ephemeral,
 			readBy: ((await msg.populate("readBy")) as IUser[]).map(
 				(readyBy_User) => readyBy_User.id
 			),
@@ -52,12 +64,15 @@ export const getMessagesById = async (messagesId: string[]) => {
 export const createMessage = async (data: {
 	content: string;
 	embeds: IEmbed[];
-	authorId: string;
+	author: string | (IMessage["author"] & Document);
 	channelId: string;
 	guildId: string | null;
-	hidden: boolean;
+	ephemeral: boolean;
 }) => {
-	const author = await User.findOne({ id: data.authorId });
+	const author =
+		typeof data.author === "string"
+			? await User.findOne({ id: data.author })
+			: data.author;
 	if (!author) return null;
 
 	const newMessage = new Message({
@@ -68,7 +83,7 @@ export const createMessage = async (data: {
 		system: author.system,
 		channelId: data.channelId,
 		guildId: data.guildId,
-		hidden: author.bot ? data.hidden : false,
+		ephemeral: author.bot ? data.ephemeral : false,
 		readBy: [author._id],
 	});
 	newMessage.save();
@@ -94,7 +109,7 @@ export const getMessages = async (
 			>,
 			channelId: msg.channelId,
 			guildId: msg.guildId,
-			hidden: msg.hidden,
+			hidden: msg.ephemeral,
 			readBy: ((await msg.populate("readBy")) as IUser[]).map(
 				(readyBy_User) => readyBy_User.id
 			),

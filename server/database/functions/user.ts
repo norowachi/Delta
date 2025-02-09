@@ -1,12 +1,15 @@
 import { env } from "../../constants.js";
 import { generateAuthToken } from "../../functions/token.js";
 import { generateSnowflakeID } from "../../functions/uid.js";
-import { IUser } from "../../interfaces.js";
+import { IGuild, IUser } from "../../interfaces.js";
 import { User } from "../schema/user.js";
 
 export const getUserById = async (userId: string) => {
 	const user = await User.findOne({ id: userId });
 	if (!user) return null;
+	user.guilds = ((await user.populate("guilds")) as IGuild[]).map(
+		(guild) => guild.id
+	);
 	return user;
 };
 

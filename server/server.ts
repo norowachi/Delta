@@ -4,7 +4,7 @@ import cors from "cors";
 import { Server, Socket } from "socket.io";
 import mongoose from "mongoose";
 import { AuthenticateToken, getUserFromToken } from "./functions/token.js";
-import APIRoute from "./routes/api/index.js";
+import V1Route from "./routes/v1/index.js";
 import loginRouter from "./routes/auth/login.js";
 import registerRouter from "./routes/auth/register.js";
 import { env, Status } from "./constants.js";
@@ -86,7 +86,7 @@ const APIReturner = async (_req: Request, res: Response) => {
 		.json(res.locals.json || { message: message });
 };
 
-app.use("/api", APIMiddleware, APIRoute, APIReturner);
+app.use("/v1", APIMiddleware, V1Route, APIReturner);
 
 // Socket.io server setup
 const server = app.listen(env.PORT!, () => {
@@ -101,7 +101,6 @@ export const wsConnections: Map<
 		ws: string;
 		sessionID: string;
 		socket: any;
-		lastPing: number;
 	}[]
 > = new Map();
 
@@ -150,7 +149,6 @@ io.on("connection", async (socket: Socket) => {
 					ws: connection.ws,
 					sessionID,
 					socket,
-					lastPing: Date.now(),
 				});
 
 				wsConnections.set(id, connsForThisUser);
@@ -203,41 +201,26 @@ io.on("connection", async (socket: Socket) => {
 		}
 	});
 
-	// Set up the heartbeat and ping mechanism
-	function sendHeartbeat() {
-		socket.emit("ping");
-	}
+	// send first Heartbeat
+	Heartbeat();
 
-	socket.on("pong", async () => {
-		let con = wsConnections
-			.get(connection.id)
-			?.find((con) => con.ws === socket.id);
-		if (!con) return socket.disconnect(true);
-		con.lastPing = Date.now();
-		await delay(10 * 1000);
-		sendHeartbeat();
-	});
-
-	// Start sending heartbeats
-	sendHeartbeat();
+	// send a beat every 5 seconds
+	setInterval(() => {
+		Heartbeat();
+	}, 5 * 1000);
 
 	// Handle client disconnection
 	socket.on("disconnect", () => {
 		console.log("Client disconnected:", socket.id);
 		wsConnections.delete(connection.id);
 	});
+
+	function Heartbeat() {
+		socket.timeout(4 * 1000).emit("ping", (_: any, response: any) => {
+			if (response) return;
+			return socket.disconnect(true);
+		});
+	}
 });
 
-setInterval(() => {
-	for (const [userID, conns] of wsConnections) {
-		for (const conn of conns) {
-			if (Date.now() - conn.lastPing > 60 * 1000) {
-				conn.socket.disconnect();
-
-				console.log(
-					`[Websocket]\tConnection closed for user ${userID} with id ${conn.id}! Reason: Ping timeout!`
-				);
-			}
-		}
-	}
-}, 30 * 1000);
+export default io;

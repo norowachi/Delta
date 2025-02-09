@@ -23,7 +23,7 @@ guildCreateRouter.post(
 			return next();
 		}
 		res.locals.status = "200";
-		res.locals.json({
+		res.locals.json = {
 			id: result.id,
 			name: result.name,
 			icon: result.icon,
@@ -32,6 +32,7 @@ guildCreateRouter.post(
 			ownerId: result.ownerId,
 			channels: result.channels,
 			deleted: result.deleted,
-		});
+		};
+		return next();
 	}
 );

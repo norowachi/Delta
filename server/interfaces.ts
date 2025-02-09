@@ -31,7 +31,7 @@ export interface IMessage {
 	author: Omit<IUser, "password" | "token">;
 	channelId: string;
 	guildId?: string | null;
-	hidden: boolean; // ephermal equivalent but that word is too hard for me
+	ephemeral: boolean;
 	readBy: string[];
 }
 
