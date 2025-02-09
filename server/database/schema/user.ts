@@ -16,10 +16,10 @@ const userSchema = new mongoose.Schema<IUser>({
 	guilds: [
 		{
 			type: mongoose.Schema.Types.ObjectId,
-			ref: "Guild",
+			ref: "guild",
 			required: false,
 		},
 	],
 });
 
-export const User = mongoose.model<IUser>("user", userSchema);
+export const User = mongoose.models.user || mongoose.model<IUser>("user", userSchema);

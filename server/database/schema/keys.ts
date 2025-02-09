@@ -6,4 +6,4 @@ const KeySchema = new mongoose.Schema({
 	createdAt: { type: Date, default: Date.now, expires: "7d" },
 });
 
-export const Keys = mongoose.model("keystore", KeySchema);
+export const Keys = mongoose.models.keystore || mongoose.model("keystore", KeySchema);

@@ -1,3 +1,4 @@
+import { Document, Types } from "mongoose";
 import { env } from "../../constants.js";
 import { generateAuthToken } from "../../functions/token.js";
 import { generateSnowflakeID } from "../../functions/uid.js";
@@ -5,11 +6,13 @@ import { IGuild, IUser } from "../../interfaces.js";
 import { User } from "../schema/user.js";
 
 export const getUserById = async (userId: string) => {
-	const user = await User.findOne({ id: userId });
+	const user = await User.findOne<IUser & Document<Types.ObjectId>>({
+		id: userId,
+	});
 	if (!user) return null;
-	user.guilds = ((await user.populate("guilds")) as IGuild[]).map(
-		(guild) => guild.id
-	);
+	const populated: Omit<IUser, "guilds"> & { guilds: IGuild[] } =
+		await user.populate("guilds");
+	user.guilds = populated.guilds.map((guild) => guild.id);
 	return user;
 };
 

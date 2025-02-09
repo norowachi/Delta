@@ -18,6 +18,7 @@ import { makeRateLimiter } from "./functions/utility.js";
 import { getMessages } from "./database/functions/message.js";
 import { getChannelById } from "./database/functions/channel.js";
 import { getGuildById } from "./database/functions/guild.js";
+import { clear } from "console";
 
 // Initialize Express app
 const app = express();
@@ -99,7 +100,6 @@ export const wsConnections: Map<
 	{
 		id: string;
 		ws: string;
-		sessionID: string;
 		socket: any;
 	}[]
 > = new Map();
@@ -109,8 +109,10 @@ const io = new Server(server);
 io.on("connection", async (socket: Socket) => {
 	console.log(`[Websocket] New client connected in WS ${socket.id}`);
 	if (!socket.handshake.auth) return socket.disconnect(true);
+
 	const type: string | undefined = socket.handshake.auth.type || "Bearer";
 	const token: string | undefined = socket.handshake.auth.token || undefined;
+
 	if (type !== "Bearer" || !token) {
 		return socket.disconnect(true);
 	}
@@ -120,6 +122,7 @@ io.on("connection", async (socket: Socket) => {
 	if (!isAuthenticated) {
 		return socket.disconnect(true);
 	}
+
 	const user = (await getUserFromToken(token))!;
 
 	if (user.disabled || user.deleted) {
@@ -135,21 +138,16 @@ io.on("connection", async (socket: Socket) => {
 	socket.on("message", async (message: WebSocketEvent) => {
 		switch (message.op) {
 			case WebSocketOP.HELLO: {
-				const { id, sessionID } = message.d;
+				const { id } = message.d;
 				if (id !== user.id) {
 					return socket.disconnect(true);
 				}
 
 				const connsForThisUser = wsConnections.get(id) || [];
 
-				for (const con of connsForThisUser) {
-					if (con.sessionID === sessionID) con.socket.disconnect();
-				}
-
 				connsForThisUser.push({
 					id,
 					ws: connection.ws,
-					sessionID,
 					socket,
 				});
 
@@ -201,13 +199,14 @@ io.on("connection", async (socket: Socket) => {
 				break;
 			}
 		}
+		return;
 	});
 
 	// send first Heartbeat
 	Heartbeat();
 
 	// send a beat every 5 seconds
-	setInterval(() => {
+	const heartbeatInterval = setInterval(() => {
 		Heartbeat();
 	}, 5 * 1000);
 
@@ -215,12 +214,13 @@ io.on("connection", async (socket: Socket) => {
 	socket.on("disconnect", () => {
 		console.log("Client disconnected:", socket.id);
 		wsConnections.delete(connection.id);
+		clearInterval(heartbeatInterval);
 	});
 
 	function Heartbeat() {
-		socket.timeout(4 * 1000).emit("ping", (_: any, response: any) => {
-			if (response) return;
-			return socket.disconnect(true);
+		socket.timeout(4 * 1000).emit("ping", (err: any, response: any) => {
+			if (err || response !== socket.id) socket.disconnect(true);
+			return;
 		});
 	}
 });

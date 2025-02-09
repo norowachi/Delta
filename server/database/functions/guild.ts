@@ -17,7 +17,7 @@ export const getGuildByMongoId = async (mongoGuildId: string) => {
 export const getGuildChannels = async (guildId: string) => {
 	const guild = await Guild.findOne({ id: guildId });
 	if (!guild) return null;
-	const channels = (await guild.populate("channels")) as IChannel[];
+	const channels = (await guild.populate("channels")).channels as IChannel[];
 	if (!channels) return null;
 	return channels;
 };

@@ -19,42 +19,16 @@ export const getMessageById = async ({
 		channelId: channelId,
 	});
 	if (!message) return null;
-	const author = (await message.populate("author")) as Omit<
-		IUser,
-		"password" | "token"
-	>;
-	message.author = author;
-	message.readBy = ((await message.populate("readBy")) as IUser[]).map(
-		(readyBy_User) => readyBy_User.id
-	);
-	return message;
-};
 
-export const getMessagesById = async (messagesId: string[]) => {
-	const messages = await Message.find({
-		$or: messagesId.map((msgId) => {
-			return { id: msgId };
-		}),
-	});
-	if (!messages.length) return null;
-	return messages.map(async (msg) => {
-		return {
-			id: msg.id,
-			content: msg.content,
-			embeds: msg.embeds,
-			system: msg.system,
-			author: (await msg.populate("author")) as Omit<
-				IUser,
-				"password" | "token"
-			>,
-			channelId: msg.channelId,
-			guildId: msg.guildId,
-			hidden: msg.ephemeral,
-			readBy: ((await msg.populate("readBy")) as IUser[]).map(
-				(readyBy_User) => readyBy_User.id
-			),
-		};
-	});
+	type pubUser = Omit<IUser, "password" | "token">;
+	const populated: Omit<IMessage, "author" | "readBy"> & {
+		author: pubUser;
+		readBy: pubUser[];
+	} = message.populate(["author", "readBy"]);
+
+	message.author = populated.author;
+	message.readBy = populated.readBy.map((readyBy_User) => readyBy_User.id);
+	return message;
 };
 
 /**
@@ -97,22 +71,25 @@ export const getMessages = async (
 ) => {
 	const messages = await Message.find(filter, projection, options);
 	if (!messages.length) return null;
+
+	type pubUser = Omit<IUser, "password" | "token">;
+
 	return messages.map(async (msg) => {
+		const populated: Omit<IMessage, "author" | "readBy"> & {
+			author: pubUser;
+			readBy: pubUser[];
+		} = msg.populate(["author", "readBy"]);
+
 		return {
 			id: msg.id,
 			content: msg.content,
 			embeds: msg.embeds,
 			system: msg.system,
-			author: (await msg.populate("author")) as Omit<
-				IUser,
-				"password" | "token"
-			>,
+			author: populated.author,
 			channelId: msg.channelId,
 			guildId: msg.guildId,
 			hidden: msg.ephemeral,
-			readBy: ((await msg.populate("readBy")) as IUser[]).map(
-				(readyBy_User) => readyBy_User.id
-			),
+			readBy: populated.readBy.map((readyBy_User) => readyBy_User.id),
 		};
 	});
 };

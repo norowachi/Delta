@@ -15,15 +15,17 @@ const MessagesSchema = new mongoose.Schema<IMessage>({
 	system: { type: Boolean, required: true },
 	author: {
 		type: mongoose.Schema.Types.ObjectId,
-		ref: "User",
+		ref: "user",
 		required: true,
 	},
 	channelId: { type: String, required: false },
 	guildId: { type: String, required: false },
 	ephemeral: { type: Boolean, required: false },
 	readBy: [
-		{ type: mongoose.Schema.Types.ObjectId, ref: "User", required: false },
+		{ type: mongoose.Schema.Types.ObjectId, ref: "user", required: false },
 	],
 });
 
-export const Message = mongoose.model<IMessage>("message", MessagesSchema);
+export const Message =
+	mongoose.models.message ||
+	mongoose.model<IMessage>("message", MessagesSchema);

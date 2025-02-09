@@ -11,7 +11,7 @@ export const getChannelById = async (channelId: string) => {
 export const getChannelMessages = async (channelId: string) => {
 	const channel = await Channel.findOne({ id: channelId });
 	if (!channel) return null;
-	const messages = (await channel.populate("messages")) as IMessage[];
+	const messages = (await channel.populate("messages")).messages as IMessage[];
 	if (!messages) return null;
 	return messages;
 };

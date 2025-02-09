@@ -11,11 +11,12 @@ const GuildSchema = new mongoose.Schema<IGuild>({
 	channels: [
 		{
 			type: mongoose.Schema.Types.ObjectId,
-			ref: "Channel",
+			ref: "channel",
 			required: true,
 		},
 	],
 	deleted: { type: Boolean, required: false },
 });
 
-export const Guild = mongoose.model<IGuild>("guild", GuildSchema);
+export const Guild =
+	mongoose.models.guild || mongoose.model<IGuild>("guild", GuildSchema);

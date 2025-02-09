@@ -6,23 +6,25 @@ const ChannelsSchema = new mongoose.Schema<IChannel>({
 	name: { type: String, required: true },
 	stickyMessage: {
 		type: mongoose.Schema.Types.ObjectId,
-		ref: "Message",
+		ref: "message",
 		required: true,
 	},
 	messages: [
 		{
 			type: mongoose.Schema.Types.ObjectId,
-			ref: "Message",
+			ref: "message",
 			required: true,
 		},
 	],
 	members: [
 		{
 			type: mongoose.Schema.Types.ObjectId,
-			ref: "User",
+			ref: "user",
 			required: false,
 		},
 	],
 });
 
-export const Channel = mongoose.model<IChannel>("channel", ChannelsSchema);
+export const Channel =
+	mongoose.models.channel ||
+	mongoose.model<IChannel>("channel", ChannelsSchema);
