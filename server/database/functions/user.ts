@@ -5,15 +5,16 @@ import { generateSnowflakeID } from "../../functions/uid.js";
 import { IGuild, IUser } from "../../interfaces.js";
 import { User } from "../schema/user.js";
 
-export const getUserById = async (userId: string) => {
+type popUser = Omit<IUser, "guilds"> & {
+	guilds: (Omit<IGuild, "channels"> & { channels: string[] })[];
+} & Document<Types.ObjectId>;
+
+export const getUserById = async (userId: string): Promise<popUser | null> => {
 	const user = await User.findOne<IUser & Document<Types.ObjectId>>({
 		id: userId,
 	});
 	if (!user) return null;
-	const populated: Omit<IUser, "guilds"> & { guilds: IGuild[] } =
-		await user.populate("guilds");
-	user.guilds = populated.guilds.map((guild) => guild.id);
-	return user;
+	return (await user.populate("guilds")) as popUser;
 };
 
 export const getUserByToken = async (token: string) => {

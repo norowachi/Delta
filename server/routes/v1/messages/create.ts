@@ -5,6 +5,8 @@ import { IMessage } from "../../../interfaces.js";
 import { getUserFromToken } from "../../../functions/token.js";
 import io from "../../../server.js";
 import { WebSocketEvent, WebSocketOP } from "../../../websocketEvents.js";
+import { getGuildChannels } from "../../../database/functions/guild.js";
+import { getChannelById } from "../../../database/functions/channel.js";
 
 const messageCreateRouter = express.Router();
 
@@ -23,15 +25,47 @@ messageCreateRouter.post(
 
 		const user = await getUserFromToken(res.locals.token);
 
+		if (!user) {
+			res.locals.status = "401";
+			return next();
+		}
+
 		const { content, embeds, ephemeral } = req.body as Pick<
 			IMessage,
 			"content" | "embeds" | "ephemeral"
 		>;
 
+		if (!content && !embeds) {
+			res.locals.status = "400";
+			return next();
+		}
+
+		// check if user has access to guild and channel
+		// just those checks should be enough and no need for
+		// guild\channel existence checks
+		const isInGuild = user.guilds.some(
+			(guild) => guild.id === req.params.guildId
+		);
+
+		if (!isInGuild) {
+			res.locals.status = "403";
+			return next();
+		}
+
+		const isInChannel = (
+			await getChannelById(req.params.channelId)
+		)?.members?.includes(user._id.toString());
+
+		if (!isInChannel) {
+			res.locals.status = "403";
+			return next();
+		}
+
+		// create the message
 		let result = await createMessage({
 			content,
 			embeds,
-			author: user?.id,
+			author: user.id,
 			channelId: req.params.channelId,
 			guildId: req.params.guildId,
 			ephemeral,
@@ -54,7 +88,7 @@ messageCreateRouter.post(
 			readBy: result.readBy,
 		} as IMessage;
 
-		io.to(result.channelId).emit("message", {
+		io.to([result.guildId, result.channelId]).emit("message", {
 			op: WebSocketOP.MESSAGE_CREATE,
 			d: result,
 		} as WebSocketEvent);

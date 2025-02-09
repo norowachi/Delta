@@ -16,8 +16,8 @@ import {
 } from "./websocketEvents.js";
 import { makeRateLimiter } from "./functions/utility.js";
 import { getMessages } from "./database/functions/message.js";
-import { getChannelById } from "./database/functions/channel.js";
-import { getGuildById } from "./database/functions/guild.js";
+import { getChannelById, getChannels } from "./database/functions/channel.js";
+import { getGuildById, getGuildChannels } from "./database/functions/guild.js";
 import { clear } from "console";
 
 // Initialize Express app
@@ -134,14 +134,11 @@ io.on("connection", async (socket: Socket) => {
 		id: user.id,
 	};
 
-	// Handle new chat messages
+	// Handle new websocket messages
 	socket.on("message", async (message: WebSocketEvent) => {
 		switch (message.op) {
 			case WebSocketOP.HELLO: {
-				const { id } = message.d;
-				if (id !== user.id) {
-					return socket.disconnect(true);
-				}
+				const id = user.id;
 
 				const connsForThisUser = wsConnections.get(id) || [];
 
@@ -200,6 +197,26 @@ io.on("connection", async (socket: Socket) => {
 			}
 		}
 		return;
+	});
+
+	socket.on("join", async (rooms: string[]) => {
+		const RequestedChannels = rooms.filter((room) => room.startsWith("c"));
+		const RequestedGuilds = rooms.filter((room) => room.startsWith("g"));
+
+		const UserGuilds = user.guilds.map((guild) => guild.id);
+
+		const possibleGuilds = RequestedGuilds.filter((guild) =>
+			UserGuilds.includes(guild)
+		);
+
+		const possibleChannels = (await getChannels(RequestedChannels))?.filter(
+			(channel) => channel.members?.includes(user._id.toString())
+		);
+
+		socket.join([
+			...possibleGuilds,
+			...(possibleChannels || []).map((r) => r.id),
+		]);
 	});
 
 	// send first Heartbeat

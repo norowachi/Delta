@@ -12,9 +12,6 @@ export interface WebSocketEvent {
 
 export interface WSHelloPayload {
 	op: WebSocketOP.HELLO;
-	d: {
-		id: string;
-	};
 }
 
 export interface WebSocketConnection {

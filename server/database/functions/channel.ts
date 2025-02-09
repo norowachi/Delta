@@ -33,3 +33,9 @@ export const createChannel = async (data: IChannel) => {
 		return null;
 	}
 };
+
+export const getChannels = async (channels: string[]) => {
+	const channel = await Channel.find<IChannel>({ id: { $in: channels } });
+	if (!channel) return null;
+	return channel;
+};
