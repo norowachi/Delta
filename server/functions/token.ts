@@ -2,22 +2,16 @@ import jose from "node-jose";
 import { TokenPayload } from "../interfaces.js";
 import { getUserById } from "../database/functions/user.js";
 import { EPOCH } from "./uid.js";
-import { getKeystore } from "../database/functions/keys.js";
+import { getKey } from "../database/functions/keys.js";
 
 // Encrypts the payload using JWE
 const encryptPayload = async (payload: any): Promise<string> => {
-	// Load the keys into a key store
-	const keystore = await getKeystore();
-	const latestKey = keystore.all({ use: "enc" })[0]; // Newest key
+	// get the key
+	const key = await getKey();
 
-	const encrypted = await jose.JWE.createEncrypt(
-		{ format: "compact" },
-		latestKey
-	)
+	const encrypted = await jose.JWE.createEncrypt({ format: "compact" }, key)
 		.update(JSON.stringify(payload))
 		.final();
-
-	console.log(encrypted);
 
 	return encrypted;
 };
@@ -25,9 +19,9 @@ const encryptPayload = async (payload: any): Promise<string> => {
 // Decrypts the JWE token and returns the payload
 const decryptToken = async (token: string): Promise<TokenPayload> => {
 	// Load the key into a key store
-	const keystore = await getKeystore();
+	const key = await getKey();
 
-	const decrypted = await jose.JWE.createDecrypt(keystore).decrypt(token);
+	const decrypted = await jose.JWE.createDecrypt(key).decrypt(token);
 
 	return JSON.parse(decrypted.plaintext.toString("utf8"));
 };
