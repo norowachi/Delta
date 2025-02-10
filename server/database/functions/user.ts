@@ -39,8 +39,6 @@ export const createUser = async (
 		const id = generateSnowflakeID("u");
 		const token = await generateAuthToken(id, data.handle, data.password);
 
-		console.log(id, token);
-
 		const user = new User<IUser>({
 			id,
 			username: data.username,
