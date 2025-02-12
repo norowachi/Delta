@@ -16,13 +16,7 @@ const ChannelsSchema = new mongoose.Schema<IChannel>({
 			required: true,
 		},
 	],
-	members: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "user",
-			required: false,
-		},
-	],
+	members: { type: [String], required: true }
 });
 
 export const Channel =
