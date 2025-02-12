@@ -88,6 +88,8 @@ const APIReturner = async (_req: Request, res: Response) => {
 };
 
 app.use("/v1", APIMiddleware, V1Route, APIReturner);
+// default version
+app.use("/", APIMiddleware, V1Route, APIReturner);
 
 // Socket.io server setup
 const server = app.listen(env.PORT!, () => {
