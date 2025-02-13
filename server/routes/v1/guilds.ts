@@ -67,7 +67,7 @@ guildsRouter.get(
 		const page = Number(req.query.page) || 1;
 		const guild = await getGuildById(guildId);
 
-		// invalid guildId or guild does not exsit, return bad request
+		// invalid guildId or guild does not exist, return bad request
 		if (!guild) {
 			res.locals.status = "400";
 			return next();
@@ -80,7 +80,7 @@ guildsRouter.get(
 			res.locals.status = "401";
 			return next();
 		}
-
+		
 		// get all channels
 		const channels = await getGuildChannels(guildId);
 		// No channels, return internal error

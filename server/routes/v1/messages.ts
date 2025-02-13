@@ -107,8 +107,8 @@ messagesRouter.get(
 			? await getUserFromToken(res.locals.token)
 			: null;
 
-		// User does not exist or not a member of the guild, return some public info
-		if (!user || !user.guilds.includes(message.guildId)) {
+		// User does not exist or not a member of the guild, return
+		if (!user || !user.guilds.find((g) => g.id === message.guildId)) {
 			res.locals.status = "401";
 			return next();
 		}

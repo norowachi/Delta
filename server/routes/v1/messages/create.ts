@@ -53,7 +53,7 @@ messageCreateRouter.post(
 
 		const isInChannel = (
 			await getChannelById(req.params.channelId)
-		)?.members?.includes(user._id.toString());
+		)?.members?.includes(user.id);
 
 		if (!isInChannel) {
 			res.locals.status = "403";
@@ -61,7 +61,7 @@ messageCreateRouter.post(
 		}
 
 		// create the message
-		let result: IMessage = await createMessage({
+		let result = await createMessage({
 			content,
 			embeds,
 			author: user.id,
@@ -80,7 +80,7 @@ messageCreateRouter.post(
 			id: result.id,
 			content: result.content,
 			embeds: result.embeds,
-			author: user.id,
+			author: user,
 			channelId: result.channelId,
 			guildId: result.guildId,
 			ephemeral: result.ephemeral,

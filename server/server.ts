@@ -17,8 +17,6 @@ import {
 import { makeRateLimiter } from "./functions/utility.js";
 import { getMessages } from "./database/functions/message.js";
 import { getChannelById, getChannels } from "./database/functions/channel.js";
-import { getGuildById, getGuildChannels } from "./database/functions/guild.js";
-import { clear } from "console";
 
 // Initialize Express app
 const app = express();
@@ -32,20 +30,30 @@ app.use(express.static(path.resolve("./public")));
 app.set("trust proxy", 1);
 app.get("/ip", (request, response) => response.send(request.ip));
 
-app.use(function (_req, res, next) {
-	res.header("Access-Control-Allow-Credentials", "true");
-	res.header("Access-Control-Allow-Origin", "*");
-	res.header(
-		"Access-Control-Allow-Headers",
-		"Origin, X-Requested-With, Content-Type, Accept, Authorization, X-HTTP-Method-Override, Set-Cookie, Cookie"
-	);
-	res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
+app.use(function (req, res, next) {
+	console.log(req.path);
+	res
+		.header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
 
 	next();
 });
 
 // only allow frontend site
-app.use(cors({ origin: "s.ily.cat" }));
+app.use(
+	cors({
+		origin: (origin, callback) => {
+			const allowedOrigins = ["https://s.ily.cat", "http://localhost:5173 "];
+			if (origin) console.log(origin);
+			if (!origin || allowedOrigins.includes(origin)) {
+				callback(null, true);
+			} else {
+				callback(new Error("Not allowed by CORS"));
+			}
+		},
+		credentials: true,
+	})
+);
 
 app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
@@ -63,19 +71,17 @@ const APIMiddleware = async (
 	res: Response,
 	next: NextFunction
 ) => {
-	const [type, token] = req.header("authorization")?.split(" ") || [];
-	if (type.length > 0 && type !== "Bearer") {
+	const [type, token] = req.header("Authorization")?.split(" ") || [];
+	if ((type?.length || 0) >= 0 && type !== "Bearer") {
 		return res.status(401).json({ message: Status["401"] });
 	}
 
-	const isAuthenticated = await AuthenticateToken(token);
-
-	if (isAuthenticated) {
-		res.locals.token = token;
-		return next();
-	} else {
-		return next();
+	if (token) {
+		const isAuthenticated = await AuthenticateToken(token);
+		if (isAuthenticated) res.locals.token = token;
 	}
+
+	return next();
 };
 
 const APIReturner = async (_req: Request, res: Response) => {
@@ -106,7 +112,11 @@ export const wsConnections: Map<
 	}[]
 > = new Map();
 
-const io = new Server(server);
+const io = new Server(server, {
+	cors: {
+		origin: "*",
+	},
+});
 
 io.on("connection", async (socket: Socket) => {
 	console.log(`[Websocket] New client connected in WS ${socket.id}`);
@@ -161,15 +171,12 @@ io.on("connection", async (socket: Socket) => {
 					await getMessages({
 						readBy: { $nin: [user._id] },
 					})
-				)?.filter(async (msg) => {
-					const message = await msg;
+				)?.filter(async (message) => {
 					if (message.guildId) {
-						return user.guilds.includes(
-							(await getGuildById(message.guildId))?._id?.toString() || ""
-						);
+						return user.guilds.some((g) => g.id === message.guildId);
 					}
 					return (await getChannelById(message.channelId))?.members?.includes(
-						user._id.toString()
+						user.id
 					);
 				});
 
@@ -184,10 +191,9 @@ io.on("connection", async (socket: Socket) => {
 				const unreadMessagesObject = {} as Record<string, number>;
 
 				for (const msg of unreadDirectMessages) {
-					unreadMessagesObject[(await msg).channelId] =
-						unreadDirectMessages.filter(
-							async (m) => ((await m).channelId = (await msg).channelId)
-						).length;
+					unreadMessagesObject[msg.channelId] = unreadDirectMessages.filter(
+						async (m) => (m.channelId = msg.channelId)
+					).length;
 				}
 
 				socket.send({
@@ -214,7 +220,7 @@ io.on("connection", async (socket: Socket) => {
 		);
 
 		const possibleChannels = (await getChannels(RequestedChannels))?.filter(
-			(channel) => channel.members?.includes(user._id.toString())
+			(channel) => channel.members?.includes(user.id.toString())
 		);
 
 		socket.join([

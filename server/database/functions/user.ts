@@ -17,11 +17,14 @@ export const getUserById = async (userId: string): Promise<popUser | null> => {
 	return (await user.populate("guilds")) as popUser;
 };
 
-export const getUserByToken = async (token: string) => {
+export const getUserByToken = async (
+	token: string
+): Promise<(IUser & Document) | null> => {
 	const user = await User.findOne({ token: token });
 	if (!user) return null;
 	return user;
 };
+
 export const createUser = async (
 	data: Omit<
 		IUser,
@@ -34,7 +37,7 @@ export const createUser = async (
 		| "guilds"
 		| "avatar"
 	>
-) => {
+): Promise<(IUser & Document) | null> => {
 	try {
 		const id = generateSnowflakeID("u");
 		const token = await generateAuthToken(id, data.handle, data.password);
@@ -53,7 +56,7 @@ export const createUser = async (
 			bot: false,
 			system: false,
 			token,
-			guilds: [], //TODO: add the base - in this case "townhall" guild id
+			guilds: ["g0"], //TODO: add the base - in this case "townhall" guild id
 		});
 		await user.save();
 		return user;

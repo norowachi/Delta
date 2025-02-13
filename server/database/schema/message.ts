@@ -8,8 +8,8 @@ const EmbedSchema = new mongoose.Schema<IEmbed>({
 	thumbnail: { type: String, required: false },
 });
 
-const MessagesSchema = new mongoose.Schema<IMessage>({
-	id: { type: String, required: true },
+const MessagesSchema = new mongoose.Schema<IMessage & mongoose.Document>({
+	id: { type: String, required: true, unique: true },
 	content: { type: String, required: false },
 	embeds: { type: [EmbedSchema], required: false },
 	system: { type: Boolean, required: true },

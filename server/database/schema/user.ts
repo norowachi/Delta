@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { IUser } from "../../interfaces.js";
 
-const userSchema = new mongoose.Schema<IUser>({
-	id: { type: String, required: true },
+const userSchema = new mongoose.Schema<IUser & mongoose.Document>({
+	id: { type: String, required: true, unique: true },
 	username: { type: String, required: true, unique: true },
 	handle: { type: String, required: true, unique: true },
 	avatar: { type: String, required: true },
@@ -22,4 +22,5 @@ const userSchema = new mongoose.Schema<IUser>({
 	],
 });
 
-export const User = mongoose.models.user || mongoose.model<IUser>("user", userSchema);
+export const User =
+	mongoose.models.user || mongoose.model<IUser>("user", userSchema);

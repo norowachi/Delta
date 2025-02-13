@@ -13,7 +13,7 @@ export const getMessageById = async ({
 	guildId: string;
 	channelId: string;
 	messageId: string;
-}) => {
+}): Promise<(IMessage & Document) | null> => {
 	const message = await Message.findOne({
 		id: messageId,
 		guildId: guildId,
@@ -43,7 +43,7 @@ export const createMessage = async (data: {
 	channelId: string;
 	guildId: string | null;
 	ephemeral: boolean;
-}) => {
+}): Promise<(IMessage & Document) | null> => {
 	const author =
 		typeof data.author === "string"
 			? await User.findOne({ id: data.author })
@@ -67,7 +67,7 @@ export const createMessage = async (data: {
 		{ $push: { messages: newMessage._id } }
 	);
 
-	newMessage.save();
+	await newMessage.save();
 	return newMessage;
 };
 
@@ -75,28 +75,36 @@ export const getMessages = async (
 	filter: FilterQuery<typeof Message>,
 	projection?: ProjectionType<typeof Message>,
 	options?: QueryOptions<typeof Message>
-) => {
-	const messages = await Message.find(filter, projection, options);
+): Promise<IMessage[] | null> => {
+	const messages = await Message.find<IMessage & Document>(
+		filter,
+		projection,
+		options
+	);
 	if (!messages.length) return null;
 
 	type pubUser = Omit<IUser, "password" | "token">;
 
-	return messages.map(async (msg) => {
-		const populated: Omit<IMessage, "author" | "readBy"> & {
-			author: pubUser;
-			readBy: pubUser[];
-		} = msg.populate(["author", "readBy"]);
+	return Promise.all(
+		messages.map(async (msg) => {
+			const populated: Omit<IMessage, "author" | "readBy"> & {
+				author: pubUser;
+				readBy: pubUser[];
+			} = await msg.populate(["author", "readBy"]);
 
-		return {
-			id: msg.id,
-			content: msg.content,
-			embeds: msg.embeds,
-			system: msg.system,
-			author: populated.author,
-			channelId: msg.channelId,
-			guildId: msg.guildId,
-			hidden: msg.ephemeral,
-			readBy: populated.readBy.map((readyBy_User) => readyBy_User.id),
-		};
-	});
+			return {
+				id: msg.id,
+				content: msg.content,
+				embeds: msg.embeds,
+				system: msg.system,
+				author: populated.author,
+				channelId: msg.channelId,
+				guildId: msg.guildId,
+				hidden: msg.ephemeral,
+				readBy: populated.readBy.map((readyBy_User) => readyBy_User.id),
+				ephemeral: msg.ephemeral,
+				createdAt: msg.createdAt,
+			} as IMessage;
+		})
+	);
 };
