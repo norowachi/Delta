@@ -49,6 +49,7 @@ guildsRouter.get(
 			ownerId: guild.ownerId,
 			deleted: guild.deleted,
 		};
+		return next();
 	}
 );
 
@@ -79,7 +80,7 @@ guildsRouter.get(
 			res.locals.status = "401";
 			return next();
 		}
-		
+
 		// get all channels
 		const channels = await getGuildChannels(guildId);
 		// No channels, return internal error
