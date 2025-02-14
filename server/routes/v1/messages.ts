@@ -1,8 +1,5 @@
 import express, { Response } from "express";
-import {
-	getGuildById,
-	getGuildChannels,
-} from "../../database/functions/guild.js";
+import { getGuildById } from "../../database/functions/guild.js";
 import { getUserFromToken } from "../../functions/token.js";
 import { makeRateLimiter } from "../../functions/utility.js";
 import { getMessageById } from "../../database/functions/message.js";
@@ -71,7 +68,17 @@ messagesRouter.get(
 							content: m.content,
 							embeds: m.embeds,
 							system: m.system,
-							author: m.author,
+							author: {
+								id: m.author.id,
+								username: m.author.username,
+								handle: m.author.handle,
+								avatar: m.author.avatar,
+								roles: m.author.roles,
+								disabled: m.author.disabled,
+								deleted: m.author.deleted,
+								bot: m.author.bot,
+								system: m.author.system,
+							},
 							channelId: m.channelId,
 							guildId: m.guildId,
 							ephemeral: m.ephemeral,
@@ -120,7 +127,17 @@ messagesRouter.get(
 			content: message.content,
 			embeds: message.embeds,
 			system: message.system,
-			author: message.author,
+			author: {
+				id: message.author.id,
+				username: message.author.username,
+				handle: message.author.handle,
+				avatar: message.author.avatar,
+				roles: message.author.roles,
+				disabled: message.author.disabled,
+				deleted: message.author.deleted,
+				bot: message.author.bot,
+				system: message.author.system,
+			},
 			channelId: message.channelId,
 			guildId: message.guildId,
 			ephemeral: message.ephemeral,
