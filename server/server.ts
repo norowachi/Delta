@@ -21,11 +21,13 @@ import { getChannelById, getChannels } from "./database/functions/channel.js";
 // Initialize Express app
 const app = express();
 
+// stored images
+const images = express.static(path.resolve("./public/images"));
+console.log(path.resolve("./public/images"));
+app.use("/images", images);
+
 // JSON body parsing middleware
 app.use(express.json());
-
-// stored images
-app.use(express.static(path.resolve("./public")));
 
 app.set("trust proxy", 1);
 app.get("/ip", (request, response) => response.send(request.ip));
