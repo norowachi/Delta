@@ -85,7 +85,10 @@ messagesRouter.get(
 							createdAt: m.createdAt,
 						} as IMessage)
 				)
-				.slice((page - 1) * multip, page * multip),
+				.slice(
+					Math.max(messages.length - page * multip, 0),
+					messages.length - (page - 1) * multip
+				),
 		};
 		return next();
 	}

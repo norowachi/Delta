@@ -80,7 +80,7 @@ export const getMessages = async (
 		filter,
 		projection,
 		options
-	);
+	).sort({createdAt: 1});
 	if (!messages.length) return null;
 
 	type pubUser = Omit<IUser, "password" | "token">;

@@ -56,7 +56,7 @@ export const createUser = async (
 			bot: false,
 			system: false,
 			token,
-			guilds: ["g0"], //TODO: add the base - in this case "townhall" guild id
+			guilds: ["67adde6604bd4e70d418a65a"], //TODO: add the user to guild.$.member 
 		});
 		await user.save();
 		return user;
