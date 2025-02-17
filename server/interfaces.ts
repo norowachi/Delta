@@ -37,8 +37,14 @@ export interface IMessage {
 }
 
 export interface IEmbed {
+	type: "image" | "video" | "link";
 	title: string;
 	url: string;
+	image: {
+		url: string;
+		width: number;
+		height: number;
+	};
 	description: string;
 	thumbnail: string;
 }

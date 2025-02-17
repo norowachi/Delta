@@ -1,12 +1,21 @@
 import mongoose from "mongoose";
 import { IEmbed, IMessage } from "../../interfaces.js";
 
-const EmbedSchema = new mongoose.Schema<IEmbed>({
-	title: { type: String, required: true },
-	url: { type: String, required: false },
-	description: { type: String, required: true },
-	thumbnail: { type: String, required: false },
-});
+const EmbedSchema = new mongoose.Schema<IEmbed>(
+	{
+		type: { $type: String, required: true },
+		title: { $type: String, required: false },
+		url: { $type: String, required: false },
+		description: { $type: String, required: false },
+		thumbnail: { $type: String, required: false },
+		image: {
+			url: String,
+			width: Number,
+			height: Number,
+		},
+	},
+	{ typeKey: "$type" }
+);
 
 const MessagesSchema = new mongoose.Schema<IMessage & mongoose.Document>({
 	id: { type: String, required: true, unique: true },
