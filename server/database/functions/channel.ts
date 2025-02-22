@@ -22,6 +22,12 @@ export const getChannelMessages = async (
 		{ limit }
 	);
 	if (!channel) return null;
+
+	// TODO: decide whether to use offset or not
+	// and if used, decide whether to use from the end or the beginning
+	const theoritical = channel.messages.length - limit,
+		skip = offset || theoritical < 0 ? 0 : theoritical;
+
 	const messages: IMessage[] = (
 		await channel.populate({
 			path: "messages",
@@ -31,7 +37,7 @@ export const getChannelMessages = async (
 			options: {
 				sort: { createdAt: 1 },
 				limit,
-				skip: offset || channel.messages.length - limit,
+				skip: skip,
 			},
 		})
 	).messages;
