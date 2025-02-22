@@ -28,7 +28,11 @@ export const getChannelMessages = async (
 			populate: {
 				path: "author",
 			},
-			options: { sort: { createdAt: 1 }, limit, skip: offset },
+			options: {
+				sort: { createdAt: 1 },
+				limit,
+				skip: offset || channel.messages.length - limit,
+			},
 		})
 	).messages;
 	if (!messages) return null;

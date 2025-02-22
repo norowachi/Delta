@@ -61,12 +61,9 @@ messagesRouter.get(
 		res.locals.json = {
 			currentPage: page,
 			pages: Math.ceil(messages.length / multip), // max pages
-			messages: messages
-				?.map(formatMessage)
-				.slice(
-					Math.max(messages.length - page * multip, 0),
-					messages.length - (page - 1) * multip
-				),
+			messages: await Promise.all(
+				messages?.map(formatMessage).slice((page - 1) * multip, page * multip)
+			),
 		};
 		return next();
 	}
