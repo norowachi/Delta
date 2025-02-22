@@ -2,12 +2,11 @@ import express, { Response } from "express";
 import { getGuildById } from "../../database/functions/guild.js";
 import { getUserFromToken } from "../../functions/token.js";
 import { makeRateLimiter } from "../../functions/utility.js";
-import { getMessageById } from "../../database/functions/message.js";
-import { IMessage } from "../../interfaces.js";
 import {
-	getChannelById,
 	getChannelMessages,
-} from "../../database/functions/channel.js";
+	getMessageById,
+} from "../../database/functions/message.js";
+import { getChannelById } from "../../database/functions/channel.js";
 import messageCreateRouter from "./messages/create.js";
 import { formatMessage } from "../../functions/formatters.js";
 
@@ -45,7 +44,7 @@ messagesRouter.get(
 		}
 
 		// get all messages
-		const messages = await getChannelMessages(channel.id);
+		const messages = await getChannelMessages(channel);
 
 		// No messages, return internal error
 		if (!messages || !messages.length) {

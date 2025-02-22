@@ -1,13 +1,14 @@
 // Direct Messages
 import express, { Response } from "express";
 import { getUserFromToken } from "../../functions/token.js";
+import { getChannelById } from "../../database/functions/channel.js";
+import { ChannelTypes, IMessage } from "../../interfaces.js";
 import {
-	getChannelById,
+	createMessage,
 	getChannelMessages,
-} from "../../database/functions/channel.js";
-import { ChannelTypes, IMessage, IUser } from "../../interfaces.js";
-import { createMessage } from "../../database/functions/message.js";
+} from "../../database/functions/message.js";
 import { makeRateLimiter } from "../../functions/utility.js";
+import { formatChannel, formatMessage } from "../../functions/formatters.js";
 
 const DMRouter = express.Router();
 
@@ -36,15 +37,7 @@ DMRouter.get(
 		}
 
 		res.locals.status = "200";
-		res.locals.json = {
-			id: channel.id,
-			name: channel.name,
-			stickyMessage: channel.stickyMessage?.id,
-			messages: channel.messages.map((m) => m.id),
-			guildId: null,
-			members: channel.members,
-			type: ChannelTypes.DM,
-		};
+		res.locals.json = await formatChannel(channel);
 		return next();
 	}
 );
@@ -60,7 +53,7 @@ DMRouter.get(
 		}
 		const channelId = req.params.channelId;
 		// the messages' page
-		const page = req.query.page;
+		const page = Number(req.query.page) || 1;
 		const channel = await getChannelById(channelId);
 		// If channel does not exist return "Bad Request"
 		if (!channel || channel.type !== ChannelTypes.DM) {
@@ -76,7 +69,7 @@ DMRouter.get(
 		}
 
 		// get all messages
-		const messages = await getChannelMessages(channelId);
+		const messages = await getChannelMessages(channel);
 		// No message, return nothing
 		if (!messages || !messages.length) {
 			// no messages, page 1 of 1
@@ -86,47 +79,15 @@ DMRouter.get(
 		}
 		// 30 messages per page
 		let multip = 30;
-		if (!page || typeof page !== "number" || parseInt(page) === 0) {
-			// returns max 90 messages
-			res.locals.status = "200";
-			res.locals.json = {
-				currentPage: 3, // (n of msgs) -> 90/multip = 90/30 = 3
-				pages: Math.ceil(messages.length / multip), // max pages
-				messages: messages
-					?.map((msg) => {
-						return {
-							id: msg.id,
-							content: msg.content,
-							embeds: msg.embeds,
-							system: msg.system,
-							authorId: msg.author.id,
-							channelId: msg.channelId,
-							hidden: msg.ephemeral,
-						};
-					})
-					.slice(0, 3 * multip),
-			};
-			return next();
-		}
 
 		// return the messages per page
 		res.locals.status = "200";
 		res.locals.json = {
 			currentPage: page,
 			pages: Math.ceil(messages.length / multip), // max pages
-			messages: messages
-				?.map((msg) => {
-					return {
-						id: msg.id,
-						content: msg.content,
-						embeds: msg.embeds,
-						system: msg.system,
-						authorId: msg.author.id,
-						channelId: msg.channelId,
-						hidden: msg.ephemeral,
-					};
-				})
-				.slice((page - 1) * multip, page * multip),
+			messages: await Promise.all(
+				messages?.map(formatMessage).slice((page - 1) * multip, page * multip)
+			),
 		};
 		return next();
 	}

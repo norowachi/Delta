@@ -1,10 +1,23 @@
-import { IChannel, IEmbed, IMessage, IUser } from "../../interfaces.js";
+import {
+	IChannel,
+	IEmbed,
+	IMessage,
+	IUser,
+	PrivateUser,
+} from "../../interfaces.js";
 import { Message } from "../schema/message.js";
 import { generateSnowflakeID } from "../../functions/uid.js";
 import { User } from "../schema/user.js";
-import { Document, FilterQuery, ProjectionType, QueryOptions } from "mongoose";
+import {
+	Document,
+	FilterQuery,
+	ProjectionType,
+	QueryOptions,
+	Types,
+} from "mongoose";
 import { Channel } from "../schema/channel.js";
 import { formatMessage } from "../../functions/formatters.js";
+import { getChannelById } from "./channel.js";
 
 export const getMessageById = async ({
 	guildId = "@me",
@@ -34,7 +47,7 @@ export const getMessageById = async ({
 
 /**
  *
- * @param author - author uid not mongo ObjectId
+ * @param author - author uid, not mongo ObjectId
  */
 export const createMessage = async (data: {
 	content: string;
@@ -46,7 +59,7 @@ export const createMessage = async (data: {
 }): Promise<(IMessage & Document) | null> => {
 	const author =
 		typeof data.author === "string"
-			? await User.findOne({ id: data.author })
+			? await User.findOne<IUser & Document>({ id: data.author })
 			: data.author;
 	if (!author) return null;
 
@@ -59,16 +72,41 @@ export const createMessage = async (data: {
 		channelId: data.channelId,
 		guildId: data.guildId,
 		ephemeral: author.bot ? data.ephemeral : false,
-		readBy: [author._id],
+		readBy: [author.id],
 	});
 
 	await Channel.updateOne<IChannel>(
 		{ id: data.channelId },
-		{ $push: { messages: newMessage._id } }
+		{ $inc: { messages: 1 } }
 	);
 
 	await newMessage.save();
 	return newMessage;
+};
+
+export const getChannelMessages = async (
+	channel: string | IChannel,
+	limit: number = 100,
+	offset: number = 0
+): Promise<IMessage[] | null> => {
+	const dbChannel =
+		typeof channel === "string" ? await getChannelById(channel) : channel;
+	if (!dbChannel) return null;
+
+	// TODO: decide whether to use offset or not
+	// and if used, decide whether to use from the end or the beginning
+	const theoritical = dbChannel.messages - limit,
+		skip = offset || theoritical < 0 ? 0 : theoritical;
+
+	const messages = await getMessages({ channelId: dbChannel.id }, undefined, {
+		sort: { createdAt: 1 },
+		limit,
+		skip,
+	});
+
+	if (!messages) return null;
+
+	return messages;
 };
 
 export const getMessages = async (
@@ -80,7 +118,7 @@ export const getMessages = async (
 		filter,
 		projection,
 		options
-	).sort({ createdAt: 1 });
+	);
 	if (!messages.length) return null;
 
 	return (await Promise.all(messages.map(formatMessage))).filter((m) => !!m);

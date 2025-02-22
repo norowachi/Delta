@@ -9,13 +9,7 @@ const ChannelsSchema = new mongoose.Schema<IChannel & mongoose.Document>({
 		ref: "message",
 		required: true,
 	},
-	messages: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "message",
-			required: true,
-		},
-	],
+	messages: { type: Number, required: true },
 	members: { type: [String], required: true },
 });
 

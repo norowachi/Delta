@@ -20,9 +20,7 @@ export async function formatGuild(guild: IGuild & Document) {
 		members: guild.members,
 		ownerId: guild.ownerId,
 		deleted: guild.deleted,
-		channels: await Promise.all(
-			populatedChannels.channels.map(formatChannel)
-		),
+		channels: await Promise.all(populatedChannels.channels.map(formatChannel)),
 	};
 }
 
@@ -47,7 +45,7 @@ export async function formatChannel(channel: IChannel | (IChannel & Document)) {
 		stickyMessage: populatedStickyMessage
 			? await formatMessage(populatedStickyMessage)
 			: null,
-		messages: [],
+		messages: channel.messages,
 		members: channel.members,
 	};
 }
