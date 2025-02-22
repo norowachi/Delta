@@ -1,4 +1,17 @@
 // User & Member Interfaces
+
+export interface PrivateUser {
+	id: string;
+	username: string;
+	handle: string;
+	avatar: string | null;
+	roles: number;
+	disabled: boolean;
+	deleted: boolean;
+	bot: boolean;
+	system: boolean;
+}
+
 export interface IUser {
 	id: string;
 	username: string;
@@ -16,7 +29,7 @@ export interface IUser {
 
 export interface IMember {
 	id: string;
-	user: Omit<IUser, "password" | "token">;
+	user: PrivateUser;
 	guildId: string;
 	nickname: string;
 	owner: boolean;
@@ -28,7 +41,7 @@ export interface IMessage {
 	content: string;
 	embeds: IEmbed[];
 	system: boolean;
-	author: Omit<IUser, "password" | "token" | "guilds">;
+	author: PrivateUser;
 	channelId: string;
 	guildId?: string | null;
 	ephemeral: boolean;

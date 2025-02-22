@@ -30,9 +30,7 @@ const MessagesSchema = new mongoose.Schema<IMessage & mongoose.Document>({
 	channelId: { type: String, required: false },
 	guildId: { type: String, required: false },
 	ephemeral: { type: Boolean, required: false },
-	readBy: [
-		{ type: mongoose.Schema.Types.ObjectId, ref: "user", required: false },
-	],
+	readBy: { type: [String], required: false },
 	createdAt: { type: Date, default: Date.now },
 });
 

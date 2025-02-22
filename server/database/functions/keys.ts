@@ -30,7 +30,7 @@ type Key = {
 
 export const getKey = async () => {
 	try {
-		// encryption keys for the data key
+		// encryption keys for the data key, sort by oldest
 		const enckeys = await Keys.find<Key>().sort({
 			createdAt: -1,
 		});

@@ -4,6 +4,7 @@ import { generateSnowflakeID } from "../../functions/uid.js";
 import { User } from "../schema/user.js";
 import { Document, FilterQuery, ProjectionType, QueryOptions } from "mongoose";
 import { Channel } from "../schema/channel.js";
+import { formatMessage } from "../../functions/formatters.js";
 
 export const getMessageById = async ({
 	guildId = "@me",
@@ -25,10 +26,9 @@ export const getMessageById = async ({
 	const populated: Omit<IMessage, "author" | "readBy"> & {
 		author: pubUser;
 		readBy: pubUser[];
-	} = message.populate(["author", "readBy"]);
+	} = message.populate("author");
 
 	message.author = populated.author;
-	message.readBy = populated.readBy.map((readyBy_User) => readyBy_User.id);
 	return message;
 };
 
@@ -80,31 +80,8 @@ export const getMessages = async (
 		filter,
 		projection,
 		options
-	).sort({createdAt: 1});
+	).sort({ createdAt: 1 });
 	if (!messages.length) return null;
 
-	type pubUser = Omit<IUser, "password" | "token">;
-
-	return Promise.all(
-		messages.map(async (msg) => {
-			const populated: Omit<IMessage, "author" | "readBy"> & {
-				author: pubUser;
-				readBy: pubUser[];
-			} = await msg.populate(["author", "readBy"]);
-
-			return {
-				id: msg.id,
-				content: msg.content,
-				embeds: msg.embeds,
-				system: msg.system,
-				author: populated.author,
-				channelId: msg.channelId,
-				guildId: msg.guildId,
-				hidden: msg.ephemeral,
-				readBy: populated.readBy.map((readyBy_User) => readyBy_User.id),
-				ephemeral: msg.ephemeral,
-				createdAt: msg.createdAt,
-			} as IMessage;
-		})
-	);
+	return (await Promise.all(messages.map(formatMessage))).filter((m) => !!m);
 };

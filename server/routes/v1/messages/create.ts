@@ -6,6 +6,7 @@ import { getUserFromToken } from "../../../functions/token.js";
 import io from "../../../server.js";
 import { WebSocketEvent, WebSocketOP } from "../../../websocketEvents.js";
 import { getChannelById } from "../../../database/functions/channel.js";
+import { formatMessage } from "../../../functions/formatters.js";
 
 const messageCreateRouter = express.Router();
 
@@ -76,27 +77,9 @@ messageCreateRouter.post(
 		}
 
 		res.locals.status = "200";
-		res.locals.json = {
-			id: result.id,
-			content: result.content,
-			embeds: result.embeds,
-			author: {
-				id: user.id,
-				username: user.username,
-				handle: user.handle,
-				avatar: user.avatar,
-				roles: user.roles,
-				disabled: user.disabled,
-				deleted: user.deleted,
-				bot: user.bot,
-				system: user.system,
-			},
-			channelId: result.channelId,
-			guildId: result.guildId,
-			ephemeral: result.ephemeral,
-			system: result.system,
-			createdAt: result.createdAt,
-		};
+		res.locals.json = await formatMessage(result);
+
+		// TODO(idea): emit message to a specific user when they are mentioned
 
 		io.to(
 			[result.guildId, result.channelId].filter((c) => typeof c === "string")

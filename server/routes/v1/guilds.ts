@@ -5,6 +5,7 @@ import {
 } from "../../database/functions/guild.js";
 import { getUserFromToken } from "../../functions/token.js";
 import { makeRateLimiter } from "../../functions/utility.js";
+import { formatChannel, formatGuild } from "../../functions/formatters.js";
 
 const guildsRouter = express.Router();
 
@@ -41,14 +42,7 @@ guildsRouter.get(
 
 		// User is a member, return all data needed
 		res.locals.status = "200";
-		res.locals.json = {
-			id: guild.id,
-			name: guild.name,
-			icon: guild.icon,
-			memberCount: guild.memberCount,
-			ownerId: guild.ownerId,
-			deleted: guild.deleted,
-		};
+		res.locals.json = await formatGuild(guild);
 		return next();
 	}
 );
@@ -97,17 +91,10 @@ guildsRouter.get(
 		res.locals.json = {
 			currentPage: page,
 			pages: Math.ceil(channels.length / multip), // max pages
-			channels: channels
-				?.map((c) => {
-					return {
-						id: c.id,
-						name: c.name,
-						stickyNessage: c.stickyMessage?.id,
-						messages: c.messages.map((m) => m.id),
-						members: c.members,
-					};
-				})
-				.slice((page - 1) * multip, page * multip),
+			// TODO: handle null(s)
+			channels: await Promise.all(
+				channels?.map(formatChannel).slice((page - 1) * multip, page * multip)
+			),
 		};
 		return next();
 	}

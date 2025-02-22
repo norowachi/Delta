@@ -17,7 +17,14 @@ export const getGuildChannels = async (
 ): Promise<(IChannel & Document)[] | null> => {
 	const guild = await Guild.findOne({ id: guildId }, null, { limit });
 	if (!guild) return null;
-	const channels = (await guild.populate("channels")).channels;
+	const channels = (
+		await guild.populate({
+			path: "channels",
+			populate: {
+				path: "stickyMessage",
+			},
+		})
+	).channels;
 	if (!channels) return null;
 	return channels;
 };

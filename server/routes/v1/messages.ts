@@ -9,6 +9,7 @@ import {
 	getChannelMessages,
 } from "../../database/functions/channel.js";
 import messageCreateRouter from "./messages/create.js";
+import { formatMessage } from "../../functions/formatters.js";
 
 const messagesRouter = express.Router();
 
@@ -61,30 +62,7 @@ messagesRouter.get(
 			currentPage: page,
 			pages: Math.ceil(messages.length / multip), // max pages
 			messages: messages
-				?.map(
-					(m) =>
-						({
-							id: m.id,
-							content: m.content,
-							embeds: m.embeds,
-							system: m.system,
-							author: {
-								id: m.author.id,
-								username: m.author.username,
-								handle: m.author.handle,
-								avatar: m.author.avatar,
-								roles: m.author.roles,
-								disabled: m.author.disabled,
-								deleted: m.author.deleted,
-								bot: m.author.bot,
-								system: m.author.system,
-							},
-							channelId: m.channelId,
-							guildId: m.guildId,
-							ephemeral: m.ephemeral,
-							createdAt: m.createdAt,
-						} as IMessage)
-				)
+				?.map(formatMessage)
 				.slice(
 					Math.max(messages.length - page * multip, 0),
 					messages.length - (page - 1) * multip
@@ -125,27 +103,8 @@ messagesRouter.get(
 
 		// User is a member, return all data needed
 		res.locals.status = "200";
-		res.locals.json = {
-			id: message.id,
-			content: message.content,
-			embeds: message.embeds,
-			system: message.system,
-			author: {
-				id: message.author.id,
-				username: message.author.username,
-				handle: message.author.handle,
-				avatar: message.author.avatar,
-				roles: message.author.roles,
-				disabled: message.author.disabled,
-				deleted: message.author.deleted,
-				bot: message.author.bot,
-				system: message.author.system,
-			},
-			channelId: message.channelId,
-			guildId: message.guildId,
-			ephemeral: message.ephemeral,
-			createdAt: message.createdAt,
-		} as IMessage;
+		// TODO: handle null
+		res.locals.json = (await formatMessage(message)) || {};
 	}
 );
 
