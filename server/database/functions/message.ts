@@ -104,8 +104,6 @@ export const getChannelMessages = async (
 		skip,
 	});
 
-	if (!messages) return null;
-
 	return messages || [];
 };
 
