@@ -23,7 +23,6 @@ const app = express();
 
 // stored images
 const images = express.static(path.resolve("./public/images"));
-console.log(path.resolve("./public/images"));
 app.use("/images", images);
 
 // JSON body parsing middleware
@@ -32,12 +31,12 @@ app.use(express.json());
 app.set("trust proxy", 1);
 app.get("/ip", (request, response) => response.send(request.ip));
 
-app.use(function (req, res, next) {
+app.use(function (_req, res, next) {
 	res
 		.header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
 
-	next();
+	return next();
 });
 
 // only allow frontend site
@@ -47,9 +46,9 @@ app.use(
 			const allowedOrigins = ["https://s.ily.cat", "http://localhost:5173 "];
 			if (origin) console.log(origin);
 			if (!origin || allowedOrigins.includes(origin)) {
-				callback(null, true);
+				return callback(null, true);
 			} else {
-				callback(new Error("Not allowed by CORS"));
+				return callback(new Error("Not allowed by CORS"));
 			}
 		},
 		credentials: true,
@@ -85,13 +84,12 @@ const APIMiddleware = async (
 	return next();
 };
 
-const APIReturner = async (_req: Request, res: Response) => {
+export const APIReturner = async (_: Request, res: Response) => {
 	const code: keyof typeof Status = res.locals.status || "500";
-	const message = Status[code];
 
 	return res
 		.status(parseInt(code))
-		.json(res.locals.json || { message: message });
+		.json(res.locals.json || { message: Status[code] });
 };
 
 app.use("/v1", APIMiddleware, V1Route, APIReturner);

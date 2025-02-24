@@ -1,7 +1,7 @@
 import express, { Response } from "express";
 import { getGuildById } from "../../database/functions/guild.js";
 import { getUserFromToken } from "../../functions/token.js";
-import { makeRateLimiter } from "../../functions/utility.js";
+import { makeRateLimiter, nextRouter } from "../../functions/utility.js";
 import {
 	getChannelMessages,
 	getMessageById,
@@ -21,6 +21,7 @@ messagesRouter.get(
 			res.locals.status = "401";
 			return next();
 		}
+
 		const guildId = req.params.guildId;
 		const channelId = req.params.channelId;
 		// the messages' page
@@ -36,9 +37,12 @@ messagesRouter.get(
 
 		const user = await getUserFromToken(res.locals.token);
 
-		// user does not exist or is not a member or the guild, return 401 (Unauthorized)
-		// TODO: check for channel perms too
-		if (!user || !guild.members.includes(user.id)) {
+		// user does not exist or is not a member of the guild/channel, return 401 (Unauthorized)
+		if (
+			!user ||
+			!guild.members.includes(user.id) ||
+			!channel.members.includes(user.id)
+		) {
 			res.locals.status = "401";
 			return next();
 		}
@@ -47,7 +51,7 @@ messagesRouter.get(
 		const messages = await getChannelMessages(channel);
 
 		// No messages, return internal error
-		if (!messages || !messages.length) {
+		if (!messages) {
 			res.locals.status = "500";
 			return next();
 		}
@@ -65,7 +69,8 @@ messagesRouter.get(
 			),
 		};
 		return next();
-	}
+	},
+	nextRouter
 );
 
 // get a message data
@@ -101,7 +106,8 @@ messagesRouter.get(
 		res.locals.status = "200";
 		// TODO: handle null
 		res.locals.json = (await formatMessage(message)) || {};
-	}
+	},
+	nextRouter
 );
 
 // start; other related routes

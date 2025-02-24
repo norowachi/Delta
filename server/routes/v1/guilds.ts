@@ -4,7 +4,7 @@ import {
 	getGuildChannels,
 } from "../../database/functions/guild.js";
 import { getUserFromToken } from "../../functions/token.js";
-import { makeRateLimiter } from "../../functions/utility.js";
+import { makeRateLimiter, nextRouter } from "../../functions/utility.js";
 import { formatChannel, formatGuild } from "../../functions/formatters.js";
 
 const guildsRouter = express.Router();
@@ -44,7 +44,8 @@ guildsRouter.get(
 		res.locals.status = "200";
 		res.locals.json = await formatGuild(guild);
 		return next();
-	}
+	},
+	nextRouter
 );
 
 // get guild channels
@@ -74,7 +75,7 @@ guildsRouter.get(
 			res.locals.status = "401";
 			return next();
 		}
-		
+
 		// get all channels
 		const channels = await getGuildChannels(guildId);
 		// No channels, return internal error
@@ -97,7 +98,8 @@ guildsRouter.get(
 			),
 		};
 		return next();
-	}
+	},
+	nextRouter
 );
 
 // start; other guild related routes
