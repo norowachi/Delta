@@ -77,5 +77,6 @@ export async function formatMessage(message: IMessage | (IMessage & Document)) {
 		guildId: m.guildId,
 		ephemeral: m.ephemeral,
 		createdAt: m.createdAt,
+		mentions: m.mentions,
 	} as IMessage;
 }

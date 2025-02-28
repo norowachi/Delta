@@ -7,7 +7,7 @@ import io from "../../../server.js";
 import { WebSocketEvent, WebSocketOP } from "../../../websocketEvents.js";
 import { getChannelById } from "../../../database/functions/channel.js";
 import { formatMessage } from "../../../functions/formatters.js";
-import { getUserById, getUsers } from "../../../database/functions/user.js";
+import { getUsers } from "../../../database/functions/user.js";
 
 const messageCreateRouter = express.Router();
 
@@ -62,26 +62,28 @@ messageCreateRouter.post(
 			return next();
 		}
 
-		const contentMatch = content.match(/@(\d|\w)+/g);
+		const contentMatch = content?.match(/<@(u\d|\w)+>/g);
+
 		// get the ids mentions
-		const __ids = contentMatch?.filter(/^@u\d+/.test);
-		const mentionIds = (await getUsers({ ids: __ids }))?.map((u) => u.id) || [];
+		const __ids = contentMatch
+			?.filter((value) => /^<@u\d+>/.test(value))
+			.map((c) => c.slice(1));
+		const mentionIds: string[] =
+			(await getUsers({ ids: __ids }))?.map((u) => u.id) || [];
+
 		// get the non-ids mentions, which we assume is usernames
-		const __usernames = contentMatch?.filter(
-			(c) => !__ids?.includes(c.slice(1))
-		);
-		const mentionUsers =
+		const __usernames = contentMatch
+			?.filter((c) => !__ids?.includes(c.slice(1)))
+			.map((c) => c.slice(1));
+		const mentionUsers: string[] =
 			(
 				await getUsers({
 					usernames: __usernames,
 				})
 			)?.map((u) => u.id) || [];
-		const mentions = Array.from(new Set([...mentionIds, ...mentionUsers]));
 
-		// emit mention event to mentioned users
-		mentions.map((id) => {
-			io.to(id).emit("mention");
-		});
+		// combine the all mentions
+		const mentions = Array.from(new Set([...mentionIds, ...mentionUsers]));
 
 		// create the message
 		let result = await createMessage({
@@ -101,6 +103,13 @@ messageCreateRouter.post(
 
 		res.locals.status = "200";
 		res.locals.json = await formatMessage(result);
+
+		// emit mention event to mentioned users
+		mentions
+			// .filter((id) => id !== user.id)
+			.map((id) => {
+				io.to(id).emit("mention", res.locals.json);
+			});
 
 		io.to(result.channelId).emit("message", {
 			op: WebSocketOP.MESSAGE_CREATE,

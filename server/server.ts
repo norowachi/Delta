@@ -142,6 +142,8 @@ io.on("connection", async (socket: Socket) => {
 		return socket.disconnect(true);
 	}
 
+	socket.join(user.id);
+
 	// Handle new websocket messages
 	socket.on("message", async (message: WebSocketEvent) => {
 		switch (message.op) {
