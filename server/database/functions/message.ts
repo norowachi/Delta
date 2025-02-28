@@ -1,20 +1,8 @@
-import {
-	IChannel,
-	IEmbed,
-	IMessage,
-	IUser,
-	PrivateUser,
-} from "../../interfaces.js";
+import { IChannel, IEmbed, IMessage, IUser } from "../../interfaces.js";
 import { Message } from "../schema/message.js";
 import { generateSnowflakeID } from "../../functions/uid.js";
 import { User } from "../schema/user.js";
-import {
-	Document,
-	FilterQuery,
-	ProjectionType,
-	QueryOptions,
-	Types,
-} from "mongoose";
+import { Document, FilterQuery, ProjectionType, QueryOptions } from "mongoose";
 import { Channel } from "../schema/channel.js";
 import { formatMessage } from "../../functions/formatters.js";
 import { getChannelById } from "./channel.js";
@@ -56,6 +44,7 @@ export const createMessage = async (data: {
 	channelId: string;
 	guildId: string | null;
 	ephemeral: boolean;
+	mentions?: string[];
 }): Promise<(IMessage & Document) | null> => {
 	const author =
 		typeof data.author === "string"
@@ -73,6 +62,7 @@ export const createMessage = async (data: {
 		guildId: data.guildId,
 		ephemeral: author.bot ? data.ephemeral : false,
 		readBy: [author.id],
+		mentions: data.mentions || [],
 	});
 
 	await Channel.updateOne<IChannel>(
@@ -108,9 +98,9 @@ export const getChannelMessages = async (
 };
 
 export const getMessages = async (
-	filter: FilterQuery<typeof Message>,
-	projection?: ProjectionType<typeof Message>,
-	options?: QueryOptions<typeof Message>
+	filter: FilterQuery<IMessage>,
+	projection?: ProjectionType<IMessage>,
+	options?: QueryOptions<IMessage>
 ): Promise<IMessage[] | null> => {
 	const messages = await Message.find<IMessage & Document>(
 		filter,

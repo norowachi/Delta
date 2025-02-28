@@ -24,7 +24,7 @@ export interface IUser {
 	bot: boolean;
 	system: boolean;
 	token: string;
-	guilds: string[];
+	guilds: IGuild[];
 }
 
 export interface IMember {
@@ -47,6 +47,7 @@ export interface IMessage {
 	ephemeral: boolean;
 	readBy: string[];
 	createdAt: Date;
+	mentions: string[];
 }
 
 export interface IEmbed {

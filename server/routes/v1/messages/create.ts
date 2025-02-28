@@ -7,6 +7,7 @@ import io from "../../../server.js";
 import { WebSocketEvent, WebSocketOP } from "../../../websocketEvents.js";
 import { getChannelById } from "../../../database/functions/channel.js";
 import { formatMessage } from "../../../functions/formatters.js";
+import { getUserById, getUsers } from "../../../database/functions/user.js";
 
 const messageCreateRouter = express.Router();
 
@@ -61,6 +62,27 @@ messageCreateRouter.post(
 			return next();
 		}
 
+		const contentMatch = content.match(/@(\d|\w)+/g);
+		// get the ids mentions
+		const __ids = contentMatch?.filter(/^@u\d+/.test);
+		const mentionIds = (await getUsers({ ids: __ids }))?.map((u) => u.id) || [];
+		// get the non-ids mentions, which we assume is usernames
+		const __usernames = contentMatch?.filter(
+			(c) => !__ids?.includes(c.slice(1))
+		);
+		const mentionUsers =
+			(
+				await getUsers({
+					usernames: __usernames,
+				})
+			)?.map((u) => u.id) || [];
+		const mentions = Array.from(new Set([...mentionIds, ...mentionUsers]));
+
+		// emit mention event to mentioned users
+		mentions.map((id) => {
+			io.to(id).emit("mention");
+		});
+
 		// create the message
 		let result = await createMessage({
 			content,
@@ -69,6 +91,7 @@ messageCreateRouter.post(
 			channelId: req.params.channelId,
 			guildId: req.params.guildId,
 			ephemeral,
+			mentions,
 		});
 
 		if (!result) {
@@ -79,11 +102,7 @@ messageCreateRouter.post(
 		res.locals.status = "200";
 		res.locals.json = await formatMessage(result);
 
-		// TODO(idea): emit message to a specific user when they are mentioned
-
-		io.to(
-			[result.guildId, result.channelId].filter((c) => typeof c === "string")
-		).emit("message", {
+		io.to(result.channelId).emit("message", {
 			op: WebSocketOP.MESSAGE_CREATE,
 			d: res.locals.json,
 		} as WebSocketEvent);

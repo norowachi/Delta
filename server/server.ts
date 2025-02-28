@@ -2,7 +2,7 @@ import bodyParser from "body-parser";
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import { Server, Socket } from "socket.io";
-import mongoose from "mongoose";
+import mongoose, { FilterQuery } from "mongoose";
 import { AuthenticateToken, getUserFromToken } from "./functions/token.js";
 import V1Route from "./routes/v1/index.js";
 import loginRouter from "./routes/auth/login.js";
@@ -17,6 +17,8 @@ import {
 import { makeRateLimiter } from "./functions/utility.js";
 import { getMessages } from "./database/functions/message.js";
 import { getChannelById, getChannels } from "./database/functions/channel.js";
+import { Message } from "./database/schema/message.js";
+import { IMessage } from "./interfaces.js";
 
 // Initialize Express app
 const app = express();
@@ -140,46 +142,38 @@ io.on("connection", async (socket: Socket) => {
 		return socket.disconnect(true);
 	}
 
-	const connection: WebSocketConnection = {
-		ws: socket.id,
-		id: user.id,
-	};
-
 	// Handle new websocket messages
 	socket.on("message", async (message: WebSocketEvent) => {
 		switch (message.op) {
 			case WebSocketOP.HELLO: {
 				const id = user.id;
 
-				const connsForThisUser = wsConnections.get(id) || [];
-
-				connsForThisUser.push({
-					id,
-					ws: connection.ws,
-					socket,
-				});
-
-				wsConnections.set(id, connsForThisUser);
-
 				console.log(
-					`[Websocket] User with ID ${id} connected in WS ${connection.ws}!`
+					`[Websocket] User with ID ${id} connected in WS ${socket.id}!`
 				);
 
-				// Send unread messages count mapped by channel ids, if any
-				const unreadDirectMessages = (
-					await getMessages({
-						readBy: { $nin: [user._id] },
-					})
-				)?.filter(async (message) => {
-					if (message.guildId) {
-						return user.guilds.some((g) => g.id === message.guildId);
+				// get all unread messages
+				const unreadMessages = await getMessages(
+					{
+						readBy: { $nin: [id] },
+						channelId: {
+							$in: user.guilds
+								.map((g) =>
+									g.channels
+										.filter((c) => c.members.includes(id))
+										.map((c) => c.id)
+								)
+								.flat(),
+						},
+					},
+					{
+						_id: 0,
+						channelId: 1,
 					}
-					return (await getChannelById(message.channelId))?.members?.includes(
-						user.id
-					);
-				});
+				);
 
-				if (!unreadDirectMessages) {
+				// send a dummy to just fill in
+				if (!unreadMessages) {
 					socket.send({
 						op: WebSocketOP.HELLO,
 						d: { unreadMessages: 0 },
@@ -189,12 +183,18 @@ io.on("connection", async (socket: Socket) => {
 
 				const unreadMessagesObject = {} as Record<string, number>;
 
-				for (const msg of unreadDirectMessages) {
-					unreadMessagesObject[msg.channelId] = unreadDirectMessages.filter(
-						async (m) => (m.channelId = msg.channelId)
-					).length;
-				}
+				unreadMessages.map((unread) => {
+					// if the channel id is not in the object, add it
+					if (!unreadMessagesObject[unread.channelId]) {
+						unreadMessagesObject[unread.channelId] = 1;
+					}
+					// set a limit of 150 unreads per channel
+					if (unreadMessagesObject[unread.channelId] >= 150) return;
+					// inc the count
+					unreadMessagesObject[unread.channelId]++;
+				});
 
+				// send the object
 				socket.send({
 					op: WebSocketOP.HELLO,
 					d: { unreadMessages: unreadMessagesObject },
@@ -210,22 +210,17 @@ io.on("connection", async (socket: Socket) => {
 		if (!rooms || !rooms.length || !Array.isArray(rooms)) return;
 
 		const RequestedChannels = rooms.filter((room) => room.startsWith("c"));
-		const RequestedGuilds = rooms.filter((room) => room.startsWith("g"));
-
-		const UserGuilds = user.guilds.map((guild) => guild.id);
-
-		const possibleGuilds = RequestedGuilds.filter((guild) =>
-			UserGuilds.includes(guild)
-		);
 
 		const possibleChannels = (await getChannels(RequestedChannels))?.filter(
 			(channel) => channel.members?.includes(user.id.toString())
 		);
 
-		socket.join([
-			...possibleGuilds,
-			...(possibleChannels || []).map((r) => r.id),
-		]);
+		return socket.join((possibleChannels || []).map((r) => r.id));
+	});
+
+	socket.on("leave", async (room: string) => {
+		if (!room) return;
+		return socket.leave(room);
 	});
 
 	// send first Heartbeat
@@ -239,7 +234,6 @@ io.on("connection", async (socket: Socket) => {
 	// Handle client disconnection
 	socket.on("disconnect", () => {
 		console.log("Client disconnected:", socket.id);
-		wsConnections.delete(connection.id);
 		clearInterval(heartbeatInterval);
 	});
 

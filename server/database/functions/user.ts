@@ -5,16 +5,33 @@ import { generateSnowflakeID } from "../../functions/uid.js";
 import { IGuild, IUser } from "../../interfaces.js";
 import { User } from "../schema/user.js";
 
-type popUser = Omit<IUser, "guilds"> & {
-	guilds: (Omit<IGuild, "channels"> & { channels: string[] })[];
-} & Document<Types.ObjectId>;
+export const getUsers = async ({
+	ids,
+	usernames,
+}: {
+	ids?: string[];
+	usernames?: string[];
+}): Promise<(IUser & Document)[] | null> => {
+	let users: (IUser & Document)[] | null = null;
+	if (ids) {
+		users = await User.find({ id: { $in: ids } });
+	} else if (usernames) {
+		users = await User.find({ username: { $in: usernames } });
+	} else return null;
+	return users;
+};
 
-export const getUserById = async (userId: string): Promise<popUser | null> => {
+export const getUserById = async (
+	userId: string
+): Promise<(IUser & Document<Types.ObjectId>) | null> => {
 	const user = await User.findOne<IUser & Document<Types.ObjectId>>({
 		id: userId,
 	});
 	if (!user) return null;
-	return (await user.populate("guilds")) as popUser;
+	return await user.populate({
+		path: "guilds",
+		populate: "channels",
+	});
 };
 
 export const getUserByToken = async (
@@ -42,7 +59,7 @@ export const createUser = async (
 		const id = generateSnowflakeID("u");
 		const token = await generateAuthToken(id, data.handle, data.password);
 
-		const user = new User<IUser>({
+		const user = new User<Omit<IUser, "guilds"> & { guilds: string[] }>({
 			id,
 			username: data.username,
 			handle: data.handle,
@@ -56,7 +73,7 @@ export const createUser = async (
 			bot: false,
 			system: false,
 			token,
-			guilds: ["67adde6604bd4e70d418a65a"], //TODO: add the user to guild.$.member 
+			guilds: ["67adde6604bd4e70d418a65a"], //TODO: add the user to guild.$.member
 		});
 		await user.save();
 		return user;
