@@ -67,27 +67,45 @@ messageCreateRouter.post(
 		// get the ids mentions
 		const __ids = contentMatch
 			?.filter((value) => /^<@u\d+>/.test(value))
-			.map((c) => c.slice(1));
-		const mentionIds: string[] =
-			(await getUsers({ ids: __ids }))?.map((u) => u.id) || [];
+			.map((c) => c.slice(2, -1));
+		const mentionIds =
+			(await getUsers({ ids: __ids }))?.map((u) => ({
+				id: u.id,
+				username: u.username,
+			})) || [];
 
 		// get the non-ids mentions, which we assume is usernames
 		const __usernames = contentMatch
-			?.filter((c) => !__ids?.includes(c.slice(1)))
-			.map((c) => c.slice(1));
-		const mentionUsers: string[] =
+			?.filter((c) => !__ids?.includes(c.slice(2, -1)))
+			.map((c) => c.slice(2, -1));
+
+		const mentionUsers =
 			(
 				await getUsers({
 					usernames: __usernames,
 				})
-			)?.map((u) => u.id) || [];
+			)?.map((u) => ({
+				id: u.id,
+				username: u.username,
+			})) || [];
 
 		// combine the all mentions
-		const mentions = Array.from(new Set([...mentionIds, ...mentionUsers]));
+		const mentions: Map<string, string> = new Map(
+			mentionIds.concat(mentionUsers).map((m) => [m.id, m.username])
+		);
+
+		const ModifiedContent = content.replace(/<@(u\d|\w)+>/g, (match) => {
+			const mention = match.slice(2, -1);
+			const user =
+				mentionIds.find((m) => m.id === mention || m.username === mention) ||
+				mentionUsers.find((m) => m.id === mention || m.username === mention);
+
+			return user ? `<@${user.username}>` : `@${mention}`;
+		});
 
 		// create the message
 		let result = await createMessage({
-			content,
+			content: ModifiedContent.trim(),
 			embeds,
 			author: user.id,
 			channelId: req.params.channelId,
@@ -105,11 +123,10 @@ messageCreateRouter.post(
 		res.locals.json = await formatMessage(result);
 
 		// emit mention event to mentioned users
-		mentions
-			// .filter((id) => id !== user.id)
-			.map((id) => {
-				io.to(id).emit("mention", res.locals.json);
-			});
+		// .filter((id) => id !== user.id)
+		const rooms = mentions.keys().toArray();
+		console.log(rooms);
+		if (rooms.length > 0) io.to(rooms).emit("mention", res.locals.json);
 
 		io.to(result.channelId).emit("message", {
 			op: WebSocketOP.MESSAGE_CREATE,

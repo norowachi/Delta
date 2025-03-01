@@ -44,7 +44,7 @@ export const createMessage = async (data: {
 	channelId: string;
 	guildId: string | null;
 	ephemeral: boolean;
-	mentions?: string[];
+	mentions?: Map<string, string>;
 }): Promise<(IMessage & Document) | null> => {
 	const author =
 		typeof data.author === "string"
@@ -62,7 +62,7 @@ export const createMessage = async (data: {
 		guildId: data.guildId,
 		ephemeral: author.bot ? data.ephemeral : false,
 		readBy: [author.id],
-		mentions: data.mentions || [],
+		mentions: data.mentions,
 	});
 
 	await Channel.updateOne<IChannel>(

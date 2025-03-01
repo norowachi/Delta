@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { IEmbed, IMessage } from "../../interfaces.js";
 
 const EmbedSchema = new mongoose.Schema<IEmbed>(
@@ -32,7 +32,7 @@ const MessagesSchema = new mongoose.Schema<IMessage & mongoose.Document>({
 	ephemeral: { type: Boolean, required: false },
 	readBy: { type: [String], required: false },
 	createdAt: { type: Date, default: Date.now },
-	mentions: { type: [String], required: false },
+	mentions: { type: Map, of: String, required: false },
 });
 
 export const Message =

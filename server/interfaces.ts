@@ -47,7 +47,9 @@ export interface IMessage {
 	ephemeral: boolean;
 	readBy: string[];
 	createdAt: Date;
-	mentions: string[];
+	mentions: {
+		[id: string]: string;
+	};
 }
 
 export interface IEmbed {
