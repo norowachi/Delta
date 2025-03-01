@@ -38,19 +38,19 @@ export const getMessageById = async ({
  * @param author - author uid, not mongo ObjectId
  */
 export const createMessage = async (data: {
-	content: string;
-	embeds: IEmbed[];
+	content?: string;
+	embeds?: IEmbed[];
 	author: string | (IMessage["author"] & Document);
 	channelId: string;
 	guildId: string | null;
-	ephemeral: boolean;
+	ephemeral?: boolean;
 	mentions?: Map<string, string>;
 }): Promise<(IMessage & Document) | null> => {
 	const author =
 		typeof data.author === "string"
 			? await User.findOne<IUser & Document>({ id: data.author })
 			: data.author;
-	if (!author) return null;
+	if (!author || (!data.content && !data.embeds)) return null;
 
 	const newMessage = new Message({
 		id: generateSnowflakeID("m"),

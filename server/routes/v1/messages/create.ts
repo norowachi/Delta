@@ -31,9 +31,8 @@ messageCreateRouter.post(
 			return next();
 		}
 
-		const { content, embeds, ephemeral } = req.body as Pick<
-			IMessage,
-			"content" | "embeds" | "ephemeral"
+		const { content, embeds, ephemeral } = req.body as Partial<
+			Pick<IMessage, "content" | "embeds" | "ephemeral">
 		>;
 
 		if (!content && !embeds) {
@@ -94,7 +93,7 @@ messageCreateRouter.post(
 			mentionIds.concat(mentionUsers).map((m) => [m.id, m.username])
 		);
 
-		const ModifiedContent = content.replace(/<@(u\d|\w)+>/g, (match) => {
+		const ModifiedContent = content?.replace(/<@(u\d|\w)+>/g, (match) => {
 			const mention = match.slice(2, -1);
 			const user =
 				mentionIds.find((m) => m.id === mention || m.username === mention) ||
@@ -105,7 +104,7 @@ messageCreateRouter.post(
 
 		// create the message
 		let result = await createMessage({
-			content: ModifiedContent.trim(),
+			content: ModifiedContent?.trim(),
 			embeds,
 			author: user.id,
 			channelId: req.params.channelId,
