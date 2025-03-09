@@ -9,16 +9,11 @@ import loginRouter from "./routes/auth/login.js";
 import registerRouter from "./routes/auth/register.js";
 import { env, Status } from "./constants.js";
 import path from "path";
-import {
-	WebSocketConnection,
-	WebSocketEvent,
-	WebSocketOP,
-} from "./websocketEvents.js";
+import { WebSocketEvent, WebSocketOP } from "./websocketEvents.js";
 import { makeRateLimiter } from "./functions/utility.js";
 import { getMessages } from "./database/functions/message.js";
-import { getChannelById, getChannels } from "./database/functions/channel.js";
-import { Message } from "./database/schema/message.js";
-import { IMessage } from "./interfaces.js";
+import { getChannels } from "./database/functions/channel.js";
+import TenorRouter from "./routes/tenor.js";
 
 // Initialize Express app
 const app = express();
@@ -33,7 +28,7 @@ app.use(express.json());
 app.set("trust proxy", 1);
 app.get("/ip", (request, response) => response.send(request.ip));
 
-app.use(function (_req, res, next) {
+app.use(function (_, res, next) {
 	res
 		.header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
@@ -45,13 +40,14 @@ app.use(function (_req, res, next) {
 app.use(
 	cors({
 		origin: (origin, callback) => {
-			const allowedOrigins = ["https://s.ily.cat", "http://localhost:5173 "];
-			if (origin) console.log(origin);
-			if (!origin || allowedOrigins.includes(origin)) {
-				return callback(null, true);
-			} else {
-				return callback(new Error("Not allowed by CORS"));
-			}
+			// const originURL = origin ? new URL(origin) : undefined;
+			// const allowedOrigins = ["s.ily.cat", "localhost"];
+			//if (origin) console.log(origin);
+			// if (!originURL || allowedOrigins.includes(originURL.hostname)) {
+			return callback(null, true);
+			// } else {
+			// 	return callback(new Error("Not allowed by CORS"));
+			// }
 		},
 		credentials: true,
 	})
@@ -62,6 +58,9 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 
 // MongoDB connection setup
 mongoose.connect(env.MONGODB_URL!).then(() => console.log("Connected to DB"));
+
+// Tenor Routes
+app.use("/tenor", makeRateLimiter(30), TenorRouter);
 
 // AUTH Routes
 app.use("/auth/login", makeRateLimiter(20), loginRouter);

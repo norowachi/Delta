@@ -61,7 +61,7 @@ messageCreateRouter.post(
 			return next();
 		}
 
-		const contentMatch = content?.match(/<@(u\d|\w)+>/g);
+		const contentMatch = content?.match(/<@\w+>/g);
 
 		// get the ids mentions
 		const __ids = contentMatch
@@ -93,7 +93,7 @@ messageCreateRouter.post(
 			mentionIds.concat(mentionUsers).map((m) => [m.id, m.username])
 		);
 
-		const ModifiedContent = content?.replace(/<@(u\d|\w)+>/g, (match) => {
+		const ModifiedContent = content?.replace(/<@\w+>/g, (match) => {
 			const mention = match.slice(2, -1);
 			const user =
 				mentionIds.find((m) => m.id === mention || m.username === mention) ||
