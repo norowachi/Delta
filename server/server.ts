@@ -2,7 +2,7 @@ import bodyParser from "body-parser";
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import { Server, Socket } from "socket.io";
-import mongoose, { FilterQuery } from "mongoose";
+import mongoose from "mongoose";
 import { AuthenticateToken, getUserFromToken } from "./functions/token.js";
 import V1Route from "./routes/v1/index.js";
 import loginRouter from "./routes/auth/login.js";

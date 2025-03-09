@@ -4,7 +4,7 @@ const TenorRouter = express.Router();
 
 import NodeFetchCache from "node-fetch-cache";
 import { RedisCache } from "@node-fetch-cache/redis";
-import { Status, env } from "../constants";
+import { Status, env } from "../constants.js";
 
 const options = {
 	host: "redis",
