@@ -37,6 +37,7 @@ usersRouter.get(
 				deleted: user.deleted,
 				bot: user.bot,
 				system: user.system,
+				guilds: user.guilds,
 			};
 			return next();
 		}
