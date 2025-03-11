@@ -119,7 +119,6 @@ const io = new Server(server, {
 });
 
 io.on("connection", async (socket: Socket) => {
-	console.log(`[Websocket] New client connected in WS ${socket.id}`);
 	if (!socket.handshake.auth) return socket.disconnect(true);
 
 	const type: string | undefined = socket.handshake.auth.type || "Bearer";
@@ -141,6 +140,9 @@ io.on("connection", async (socket: Socket) => {
 		return socket.disconnect(true);
 	}
 
+	console.log(
+		`\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id}\x1b[0m connected in WS \x1b[32m${socket.id}\x1b[0m`
+	);
 	socket.join(user.id);
 
 	// Handle new websocket messages
@@ -150,7 +152,7 @@ io.on("connection", async (socket: Socket) => {
 				const id = user.id;
 
 				console.log(
-					`[Websocket] User with ID ${id} connected in WS ${socket.id}!`
+					`\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id} (\x1b[32m${socket.id}\x1b[0m) sent \x1b[36mHELLO\x1b[0m`
 				);
 
 				// get all unread messages
@@ -234,7 +236,9 @@ io.on("connection", async (socket: Socket) => {
 
 	// Handle client disconnection
 	socket.on("disconnect", () => {
-		console.log("Client disconnected:", socket.id);
+		console.log(
+			`\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id} (\x1b[32m${socket.id}\x1b[0m) \x1b[31mDisconnected\x1b[0m`
+		);
 		clearInterval(heartbeatInterval);
 	});
 

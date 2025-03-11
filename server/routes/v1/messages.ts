@@ -5,10 +5,13 @@ import { makeRateLimiter, nextRouter } from "../../functions/utility.js";
 import {
 	getChannelMessages,
 	getMessageById,
+	getMessages,
 } from "../../database/functions/message.js";
 import { getChannelById } from "../../database/functions/channel.js";
 import messageCreateRouter from "./messages/create.js";
 import { formatMessage } from "../../functions/formatters.js";
+import { IMessage } from "../../interfaces.js";
+import { getTimestampFromSnowflakeID } from "../../functions/uid.js";
 
 const messagesRouter = express.Router();
 
@@ -26,6 +29,16 @@ messagesRouter.get(
 		const channelId = req.params.channelId;
 		// the messages' page
 		const page = Number(req.query.page) || 1;
+		// after messageId
+		const after = req.query.after?.toString();
+		// before messageId
+		const before = req.query.before?.toString();
+
+		if ((before && after) || ((before || after) && page)) {
+			res.locals.status = "400";
+			return next();
+		}
+
 		const guild = await getGuildById(guildId);
 		const channel = await getChannelById(channelId);
 
@@ -47,8 +60,67 @@ messagesRouter.get(
 			return next();
 		}
 
-		// get all messages
-		const messages = await getChannelMessages(channel);
+		// 100 messages per page
+		let multip = 100;
+
+		let messages: IMessage[] | null = [];
+
+		if (!after && !before) {
+			// get messages
+			messages = await getChannelMessages(channel, 100, page * multip);
+		} else if (after) {
+			// get messages after the message
+			const message = await getMessageById({
+				guildId,
+				channelId,
+				messageId: after,
+			});
+
+			if (!message) {
+				res.locals.status = "404";
+				return next();
+			}
+
+			const timestamp = getTimestampFromSnowflakeID(message.id);
+			// get messages after the message
+			messages = await getMessages(
+				{
+					guildId,
+					channelId,
+					createdAt: { $gt: Number(timestamp) * 1000 },
+				},
+				undefined,
+				{
+					sort: { createdAt: 1 },
+				}
+			);
+		} else if (before) {
+			// get messages before the message
+			const message = await getMessageById({
+				guildId,
+				channelId,
+				messageId: before,
+			});
+
+			if (!message) {
+				res.locals.status = "404";
+				return next();
+			}
+
+			const timestamp = getTimestampFromSnowflakeID(message.id);
+			// get messages before the message
+			messages = await getMessages(
+				{
+					guildId,
+					channelId,
+					createdAt: { $lt: Number(timestamp) * 1000 },
+				},
+				undefined,
+				{
+					sort: { createdAt: 1 },
+				}
+			);
+		}
 
 		// No messages, return internal error
 		if (!messages) {
@@ -56,17 +128,12 @@ messagesRouter.get(
 			return next();
 		}
 
-		// 100 messages per page
-		let multip = 100;
-
 		// return the messages per page
 		res.locals.status = "200";
 		res.locals.json = {
 			currentPage: page,
 			pages: Math.ceil(messages.length / multip), // max pages
-			messages: await Promise.all(
-				messages?.map(formatMessage).slice((page - 1) * multip, page * multip)
-			),
+			messages: await Promise.all(messages?.map(formatMessage)),
 		};
 		return next();
 	},

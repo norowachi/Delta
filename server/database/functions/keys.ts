@@ -18,7 +18,7 @@ export const rotateKey = async () => {
 		kdata: JSON.stringify(newKey.toJSON(true)),
 	});
 
-	console.log("New encryption key generated:", newKey.kid);
+	console.log("New encryption key generated: \x1b[32m%s\x1b[0m", newKey.kid);
 	return newKey;
 };
 
