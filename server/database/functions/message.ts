@@ -85,12 +85,13 @@ export const getChannelMessages = async (
 
 	// TODO: decide whether to use offset or not
 	// and if used, decide whether to use from the end or the beginning
-	const theoritical = dbChannel.messages - limit,
-		skip = theoritical < 0 ? offset : theoritical - offset;
+	const safeLimit = Math.min(limit, Math.max(0, dbChannel.messages - offset)),
+		theoritical = dbChannel.messages - safeLimit,
+		skip = Math.max(0, theoritical - offset);
 
 	const messages = await getMessages({ channelId: dbChannel.id }, undefined, {
 		sort: { createdAt: 1 },
-		limit,
+		limit: safeLimit,
 		skip,
 	});
 

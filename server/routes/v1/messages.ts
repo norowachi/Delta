@@ -66,8 +66,12 @@ messagesRouter.get(
 		let messages: IMessage[] | null = [];
 
 		if (!after && !before) {
+			if (page > Math.ceil(channel.messages / multip)) {
+				res.locals.status = "400";
+				return next();
+			}
 			// get messages
-			messages = await getChannelMessages(channel, 100, page * multip);
+			messages = await getChannelMessages(channel, 100, (page - 1) * multip);
 		} else if (after) {
 			// get messages after the message
 			const message = await getMessageById({
@@ -92,6 +96,7 @@ messagesRouter.get(
 				undefined,
 				{
 					sort: { createdAt: 1 },
+					limit: 100,
 				}
 			);
 		} else if (before) {
@@ -132,7 +137,7 @@ messagesRouter.get(
 		res.locals.status = "200";
 		res.locals.json = {
 			currentPage: page,
-			pages: Math.ceil(messages.length / multip), // max pages
+			pages: Math.ceil(channel.messages / multip), // max pages
 			messages: await Promise.all(messages?.map(formatMessage)),
 		};
 		return next();

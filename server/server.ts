@@ -152,7 +152,7 @@ io.on("connection", async (socket: Socket) => {
 				const id = user.id;
 
 				console.log(
-					`\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id} (\x1b[32m${socket.id}\x1b[0m) sent \x1b[36mHELLO\x1b[0m`
+					`\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id}\x1b[0m (\x1b[32m${socket.id}\x1b[0m) sent \x1b[36mHELLO\x1b[0m`
 				);
 
 				// get all unread messages
