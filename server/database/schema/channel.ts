@@ -1,28 +1,16 @@
 import mongoose from "mongoose";
 import { IChannel } from "../../interfaces.js";
 
-const ChannelsSchema = new mongoose.Schema<IChannel>({
-	id: { type: String, required: true },
+const ChannelsSchema = new mongoose.Schema<IChannel & mongoose.Document>({
+	id: { type: String, required: true, unique: true },
 	name: { type: String, required: true },
 	stickyMessage: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: "message",
 		required: true,
 	},
-	messages: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "message",
-			required: true,
-		},
-	],
-	members: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "user",
-			required: false,
-		},
-	],
+	messages: { type: Number, required: true },
+	members: { type: [String], required: true },
 });
 
 export const Channel =

@@ -12,6 +12,7 @@
 		"test": "ts-node server/server.ts"
 	},
 	"dependencies": {
+		"@node-fetch-cache/redis": "^1.0.0",
 		"bcrypt": "^5.1.1",
 		"body-parser": "^1.20.3",
 		"cors": "^2.8.5",
@@ -19,6 +20,7 @@
 		"express": "^4.21.2",
 		"express-rate-limit": "^7.5.0",
 		"mongoose": "^8.10.0",
+		"node-fetch-cache": "^5.0.2",
 		"node-jose": "^2.2.0",
 		"path": "^0.12.7",
 		"socket.io": "^4.8.1"

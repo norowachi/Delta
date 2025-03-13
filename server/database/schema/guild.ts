@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { IGuild } from "../../interfaces.js";
 
-const GuildSchema = new mongoose.Schema<IGuild>({
-	id: { type: String, required: true },
+const GuildSchema = new mongoose.Schema<IGuild & mongoose.Document>({
+	id: { type: String, required: true, unique: true },
 	name: { type: String, required: true },
 	icon: { type: String, required: false },
 	memberCount: { type: Number, required: true },

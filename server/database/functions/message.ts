@@ -4,6 +4,8 @@ import { generateSnowflakeID } from "../../functions/uid.js";
 import { User } from "../schema/user.js";
 import { Document, FilterQuery, ProjectionType, QueryOptions } from "mongoose";
 import { Channel } from "../schema/channel.js";
+import { formatMessage } from "../../functions/formatters.js";
+import { getChannelById } from "./channel.js";
 
 export const getMessageById = async ({
 	guildId = "@me",
@@ -13,7 +15,7 @@ export const getMessageById = async ({
 	guildId: string;
 	channelId: string;
 	messageId: string;
-}) => {
+}): Promise<(IMessage & Document) | null> => {
 	const message = await Message.findOne({
 		id: messageId,
 		guildId: guildId,
@@ -25,30 +27,30 @@ export const getMessageById = async ({
 	const populated: Omit<IMessage, "author" | "readBy"> & {
 		author: pubUser;
 		readBy: pubUser[];
-	} = message.populate(["author", "readBy"]);
+	} = message.populate("author");
 
 	message.author = populated.author;
-	message.readBy = populated.readBy.map((readyBy_User) => readyBy_User.id);
 	return message;
 };
 
 /**
  *
- * @param author - author uid not mongo ObjectId
+ * @param author - author uid, not mongo ObjectId
  */
 export const createMessage = async (data: {
-	content: string;
-	embeds: IEmbed[];
+	content?: string;
+	embeds?: IEmbed[];
 	author: string | (IMessage["author"] & Document);
 	channelId: string;
 	guildId: string | null;
-	ephemeral: boolean;
-}) => {
+	ephemeral?: boolean;
+	mentions?: Map<string, string>;
+}): Promise<(IMessage & Document) | null> => {
 	const author =
 		typeof data.author === "string"
-			? await User.findOne({ id: data.author })
+			? await User.findOne<IUser & Document>({ id: data.author })
 			: data.author;
-	if (!author) return null;
+	if (!author || (!data.content && !data.embeds)) return null;
 
 	const newMessage = new Message({
 		id: generateSnowflakeID("m"),
@@ -59,44 +61,54 @@ export const createMessage = async (data: {
 		channelId: data.channelId,
 		guildId: data.guildId,
 		ephemeral: author.bot ? data.ephemeral : false,
-		readBy: [author._id],
+		readBy: [author.id],
+		mentions: data.mentions,
 	});
 
 	await Channel.updateOne<IChannel>(
 		{ id: data.channelId },
-		{ $push: { messages: newMessage._id } }
+		{ $inc: { messages: 1 } }
 	);
 
-	newMessage.save();
+	await newMessage.save();
 	return newMessage;
 };
 
+export const getChannelMessages = async (
+	channel: string | IChannel,
+	limit: number = 100,
+	offset: number = 0
+): Promise<IMessage[] | null> => {
+	const dbChannel =
+		typeof channel === "string" ? await getChannelById(channel) : channel;
+	if (!dbChannel) return null;
+
+	// TODO: decide whether to use offset or not
+	// and if used, decide whether to use from the end or the beginning
+	const safeLimit = Math.min(limit, Math.max(0, dbChannel.messages - offset)),
+		theoritical = dbChannel.messages - safeLimit,
+		skip = Math.max(0, theoritical - offset);
+
+	const messages = await getMessages({ channelId: dbChannel.id }, undefined, {
+		sort: { createdAt: 1 },
+		limit: safeLimit,
+		skip,
+	});
+
+	return messages || [];
+};
+
 export const getMessages = async (
-	filter: FilterQuery<typeof Message>,
-	projection?: ProjectionType<typeof Message>,
-	options?: QueryOptions<typeof Message>
-) => {
-	const messages = await Message.find(filter, projection, options);
+	filter: FilterQuery<IMessage>,
+	projection?: ProjectionType<IMessage>,
+	options?: QueryOptions<IMessage>
+): Promise<IMessage[] | null> => {
+	const messages = await Message.find<IMessage & Document>(
+		filter,
+		projection,
+		options
+	);
 	if (!messages.length) return null;
 
-	type pubUser = Omit<IUser, "password" | "token">;
-
-	return messages.map(async (msg) => {
-		const populated: Omit<IMessage, "author" | "readBy"> & {
-			author: pubUser;
-			readBy: pubUser[];
-		} = msg.populate(["author", "readBy"]);
-
-		return {
-			id: msg.id,
-			content: msg.content,
-			embeds: msg.embeds,
-			system: msg.system,
-			author: populated.author,
-			channelId: msg.channelId,
-			guildId: msg.guildId,
-			hidden: msg.ephemeral,
-			readBy: populated.readBy.map((readyBy_User) => readyBy_User.id),
-		};
-	});
+	return (await Promise.all(messages.map(formatMessage))).filter((m) => !!m);
 };

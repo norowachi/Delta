@@ -46,6 +46,7 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 
 # Copy the rest of the source files into the image.
 COPY . .
+
 # Run the build script.
 RUN pnpm run build
 
@@ -66,8 +67,8 @@ COPY package.json .
 # Copy the production dependencies from the deps stage and also
 # the built application from the build stage into the image.
 COPY --from=deps /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/./public ././public
 COPY --from=build /usr/src/app/./dist ././dist
-
 
 # Expose the port that the application listens on.
 EXPOSE 7831

@@ -1,17 +1,17 @@
 import express, { Response } from "express";
-import {
-	getGuildById,
-	getGuildChannels,
-} from "../../database/functions/guild.js";
+import { getGuildById } from "../../database/functions/guild.js";
 import { getUserFromToken } from "../../functions/token.js";
-import { makeRateLimiter } from "../../functions/utility.js";
-import { getMessageById } from "../../database/functions/message.js";
-import { IMessage } from "../../interfaces.js";
+import { makeRateLimiter, nextRouter } from "../../functions/utility.js";
 import {
-	getChannelById,
 	getChannelMessages,
-} from "../../database/functions/channel.js";
+	getMessageById,
+	getMessages,
+} from "../../database/functions/message.js";
+import { getChannelById } from "../../database/functions/channel.js";
 import messageCreateRouter from "./messages/create.js";
+import { formatMessage } from "../../functions/formatters.js";
+import { IMessage } from "../../interfaces.js";
+import { getTimestampFromSnowflakeID } from "../../functions/uid.js";
 
 const messagesRouter = express.Router();
 
@@ -24,10 +24,21 @@ messagesRouter.get(
 			res.locals.status = "401";
 			return next();
 		}
+
 		const guildId = req.params.guildId;
 		const channelId = req.params.channelId;
 		// the messages' page
 		const page = Number(req.query.page) || 1;
+		// after messageId
+		const after = req.query.after?.toString();
+		// before messageId
+		const before = req.query.before?.toString();
+
+		if ((before && after) || ((before || after) && page)) {
+			res.locals.status = "400";
+			return next();
+		}
+
 		const guild = await getGuildById(guildId);
 		const channel = await getChannelById(channelId);
 
@@ -39,49 +50,99 @@ messagesRouter.get(
 
 		const user = await getUserFromToken(res.locals.token);
 
-		// user does not exist or is not a member or the guild, return 401 (Unauthorized)
-		// TODO: check for channel perms too
-		if (!user || !guild.members.includes(user.id)) {
+		// user does not exist or is not a member of the guild/channel, return 401 (Unauthorized)
+		if (
+			!user ||
+			!guild.members.includes(user.id) ||
+			!channel.members.includes(user.id)
+		) {
 			res.locals.status = "401";
-			return next();
-		}
-
-		// get all messages
-		const messages = await getChannelMessages(channel.id);
-
-		// No messages, return internal error
-		if (!messages || !messages.length) {
-			res.locals.status = "500";
 			return next();
 		}
 
 		// 100 messages per page
 		let multip = 100;
 
+		let messages: IMessage[] | null = [];
+
+		if (!after && !before) {
+			if (page > Math.ceil(channel.messages / multip)) {
+				res.locals.status = "400";
+				return next();
+			}
+			// get messages
+			messages = await getChannelMessages(channel, 100, (page - 1) * multip);
+		} else if (after) {
+			// get messages after the message
+			const message = await getMessageById({
+				guildId,
+				channelId,
+				messageId: after,
+			});
+
+			if (!message) {
+				res.locals.status = "404";
+				return next();
+			}
+
+			const timestamp = getTimestampFromSnowflakeID(message.id);
+			// get messages after the message
+			messages = await getMessages(
+				{
+					guildId,
+					channelId,
+					createdAt: { $gt: Number(timestamp) * 1000 },
+				},
+				undefined,
+				{
+					sort: { createdAt: 1 },
+					limit: 100,
+				}
+			);
+		} else if (before) {
+			// get messages before the message
+			const message = await getMessageById({
+				guildId,
+				channelId,
+				messageId: before,
+			});
+
+			if (!message) {
+				res.locals.status = "404";
+				return next();
+			}
+
+			const timestamp = getTimestampFromSnowflakeID(message.id);
+			// get messages before the message
+			messages = await getMessages(
+				{
+					guildId,
+					channelId,
+					createdAt: { $lt: Number(timestamp) * 1000 },
+				},
+				undefined,
+				{
+					sort: { createdAt: 1 },
+				}
+			);
+		}
+
+		// No messages, return internal error
+		if (!messages) {
+			res.locals.status = "500";
+			return next();
+		}
+
 		// return the messages per page
 		res.locals.status = "200";
 		res.locals.json = {
 			currentPage: page,
-			pages: Math.ceil(messages.length / multip), // max pages
-			messages: messages
-				?.map(
-					(m) =>
-						({
-							id: m.id,
-							content: m.content,
-							embeds: m.embeds,
-							system: m.system,
-							author: m.author,
-							channelId: m.channelId,
-							guildId: m.guildId,
-							ephemeral: m.ephemeral,
-							createdAt: m.createdAt,
-						} as IMessage)
-				)
-				.slice((page - 1) * multip, page * multip),
+			pages: Math.ceil(channel.messages / multip), // max pages
+			messages: await Promise.all(messages?.map(formatMessage)),
 		};
 		return next();
-	}
+	},
+	nextRouter
 );
 
 // get a message data
@@ -107,26 +168,18 @@ messagesRouter.get(
 			? await getUserFromToken(res.locals.token)
 			: null;
 
-		// User does not exist or not a member of the guild, return some public info
-		if (!user || !user.guilds.includes(message.guildId)) {
+		// User does not exist or not a member of the guild, return
+		if (!user || !user.guilds.find((g) => g.id === message.guildId)) {
 			res.locals.status = "401";
 			return next();
 		}
 
 		// User is a member, return all data needed
 		res.locals.status = "200";
-		res.locals.json = {
-			id: message.id,
-			content: message.content,
-			embeds: message.embeds,
-			system: message.system,
-			author: message.author,
-			channelId: message.channelId,
-			guildId: message.guildId,
-			ephemeral: message.ephemeral,
-			createdAt: message.createdAt,
-		} as IMessage;
-	}
+		// TODO: handle null
+		res.locals.json = (await formatMessage(message)) || {};
+	},
+	nextRouter
 );
 
 // start; other related routes

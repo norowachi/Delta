@@ -1,15 +1,24 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { IEmbed, IMessage } from "../../interfaces.js";
 
-const EmbedSchema = new mongoose.Schema<IEmbed>({
-	title: { type: String, required: true },
-	url: { type: String, required: false },
-	description: { type: String, required: true },
-	thumbnail: { type: String, required: false },
-});
+const EmbedSchema = new mongoose.Schema<IEmbed>(
+	{
+		type: { $type: String, required: true },
+		title: { $type: String, required: false },
+		url: { $type: String, required: false },
+		description: { $type: String, required: false },
+		thumbnail: { $type: String, required: false },
+		image: {
+			url: String,
+			width: Number,
+			height: Number,
+		},
+	},
+	{ typeKey: "$type" }
+);
 
-const MessagesSchema = new mongoose.Schema<IMessage>({
-	id: { type: String, required: true },
+const MessagesSchema = new mongoose.Schema<IMessage & mongoose.Document>({
+	id: { type: String, required: true, unique: true },
 	content: { type: String, required: false },
 	embeds: { type: [EmbedSchema], required: false },
 	system: { type: Boolean, required: true },
@@ -21,10 +30,9 @@ const MessagesSchema = new mongoose.Schema<IMessage>({
 	channelId: { type: String, required: false },
 	guildId: { type: String, required: false },
 	ephemeral: { type: Boolean, required: false },
-	readBy: [
-		{ type: mongoose.Schema.Types.ObjectId, ref: "user", required: false },
-	],
+	readBy: { type: [String], required: false },
 	createdAt: { type: Date, default: Date.now },
+	mentions: { type: Map, of: String, required: false },
 });
 
 export const Message =

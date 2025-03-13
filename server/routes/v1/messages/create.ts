@@ -6,6 +6,8 @@ import { getUserFromToken } from "../../../functions/token.js";
 import io from "../../../server.js";
 import { WebSocketEvent, WebSocketOP } from "../../../websocketEvents.js";
 import { getChannelById } from "../../../database/functions/channel.js";
+import { formatMessage } from "../../../functions/formatters.js";
+import { getUsers } from "../../../database/functions/user.js";
 
 const messageCreateRouter = express.Router();
 
@@ -29,9 +31,8 @@ messageCreateRouter.post(
 			return next();
 		}
 
-		const { content, embeds, ephemeral } = req.body as Pick<
-			IMessage,
-			"content" | "embeds" | "ephemeral"
+		const { content, embeds, ephemeral } = req.body as Partial<
+			Pick<IMessage, "content" | "embeds" | "ephemeral">
 		>;
 
 		if (!content && !embeds) {
@@ -53,21 +54,63 @@ messageCreateRouter.post(
 
 		const isInChannel = (
 			await getChannelById(req.params.channelId)
-		)?.members?.includes(user._id.toString());
+		)?.members?.includes(user.id);
 
 		if (!isInChannel) {
 			res.locals.status = "403";
 			return next();
 		}
 
+		const contentMatch = content?.match(/<@\w+>/g);
+
+		// get the ids mentions
+		const __ids = contentMatch
+			?.filter((value) => /^<@u\d+>/.test(value))
+			.map((c) => c.slice(2, -1));
+		const mentionIds =
+			(await getUsers({ ids: __ids }))?.map((u) => ({
+				id: u.id,
+				username: u.username,
+			})) || [];
+
+		// get the non-ids mentions, which we assume is usernames
+		const __usernames = contentMatch
+			?.filter((c) => !__ids?.includes(c.slice(2, -1)))
+			.map((c) => c.slice(2, -1));
+
+		const mentionUsers =
+			(
+				await getUsers({
+					usernames: __usernames,
+				})
+			)?.map((u) => ({
+				id: u.id,
+				username: u.username,
+			})) || [];
+
+		// combine the all mentions
+		const mentions: Map<string, string> = new Map(
+			mentionIds.concat(mentionUsers).map((m) => [m.id, m.username])
+		);
+
+		const ModifiedContent = content?.replace(/<@\w+>/g, (match) => {
+			const mention = match.slice(2, -1);
+			const user =
+				mentionIds.find((m) => m.id === mention || m.username === mention) ||
+				mentionUsers.find((m) => m.id === mention || m.username === mention);
+
+			return user ? `<@${user.username}>` : `@${mention}`;
+		});
+
 		// create the message
-		let result: IMessage = await createMessage({
-			content,
+		let result = await createMessage({
+			content: ModifiedContent?.trim(),
 			embeds,
 			author: user.id,
 			channelId: req.params.channelId,
 			guildId: req.params.guildId,
 			ephemeral,
+			mentions,
 		});
 
 		if (!result) {
@@ -76,21 +119,14 @@ messageCreateRouter.post(
 		}
 
 		res.locals.status = "200";
-		res.locals.json = {
-			id: result.id,
-			content: result.content,
-			embeds: result.embeds,
-			author: user.id,
-			channelId: result.channelId,
-			guildId: result.guildId,
-			ephemeral: result.ephemeral,
-			system: result.system,
-			createdAt: result.createdAt,
-		};
+		res.locals.json = await formatMessage(result);
 
-		io.to(
-			[result.guildId, result.channelId].filter((c) => typeof c === "string")
-		).emit("message", {
+		// emit mention event to mentioned users
+		// TODO: .filter((id) => id !== user.id)
+		const rooms = mentions.keys().toArray();
+		if (rooms.length > 0) io.to(rooms).emit("mention", res.locals.json);
+
+		io.to(result.channelId).emit("message", {
 			op: WebSocketOP.MESSAGE_CREATE,
 			d: res.locals.json,
 		} as WebSocketEvent);

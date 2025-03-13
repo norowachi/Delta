@@ -6,6 +6,9 @@ services:
     container_name: delta
     environment:
       NODE_ENV: production
+    networks:
+      - prom
+      - default
     ports:
       - 127.0.0.1:7831:7831
     depends_on:
@@ -15,8 +18,9 @@ services:
   mongo:
     image: mongodb/mongodb-community-server:7.0.9-ubi8
     container_name: delta-mongo
-    expose:
-      - 27017
+    networks:
+      - default
+    # for debugging
     ports:
       - 100.80.20.80:27888:27017
     volumes:
@@ -28,10 +32,14 @@ services:
       interval: 10s
       timeout: 10s
       retries: 3
-      start_period: 15s
+      start_period: 5s
 
 volumes:
   data:
     driver: local
   config:
     driver: local
+
+networks:
+  prom:
+    external: true

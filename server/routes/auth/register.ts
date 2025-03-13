@@ -42,7 +42,6 @@ registerRouter.post("/", async (req, res) => {
 			password: hashedPassword,
 		});
 
-		console.log(user);
 		if (!user) return res.status(500).json({ message: Status[500] });
 
 		res

@@ -18,7 +18,7 @@ export const rotateKey = async () => {
 		kdata: JSON.stringify(newKey.toJSON(true)),
 	});
 
-	console.log("New encryption key generated:", newKey.kid);
+	console.log("New encryption key generated: \x1b[32m%s\x1b[0m", newKey.kid);
 	return newKey;
 };
 
@@ -30,19 +30,17 @@ type Key = {
 
 export const getKey = async () => {
 	try {
-		// encryption keys for the data key
+		// encryption keys for the data key, sort by oldest
 		const enckeys = await Keys.find<Key>().sort({
 			createdAt: -1,
 		});
 		// data/main key to encrypt customer data with
-		const datakey = await Keys.findOne<Key>({ kid: "main" });
+		const datakey = enckeys.pop();
 		// key store for encryption keys
 		const enckeystore = jose.JWK.createKeyStore();
 
-		console.log(enckeys, datakey);
-
 		// if there are no keys, generate a new one
-		if (enckeys.length <= 1) {
+		if (!enckeys.length) {
 			const data = await jose.JWK.asKey(await rotateKey(), "json");
 			await enckeystore.add(data);
 		} else {
@@ -63,7 +61,7 @@ export const getKey = async () => {
 					datakey!.kdata
 				);
 				// the key's data
-				const kdata = JSON.stringify(kd.plaintext.toString("utf-8"));
+				const kdata = kd.plaintext.toString("utf-8");
 				// reencrypt the data key with the new key
 				const enckd = await jose.JWE.createEncrypt(
 					{ format: "compact" },
@@ -71,6 +69,15 @@ export const getKey = async () => {
 				)
 					.update(kdata)
 					.final();
+
+				// if key is older than 7 days delete it
+				if (
+					Date.now() - (enckeys[0].createdAt?.getTime() ?? Date.now()) >=
+					7 * 24 * 60 * 60 * 1000
+				) {
+					await Keys.deleteOne({ kid: enckeys[0].kid });
+				}
+
 				// update the data key
 				await Keys.updateOne({ kid: "main" }, { kdata: enckd });
 				// return it as a key

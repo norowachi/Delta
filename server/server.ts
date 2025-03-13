@@ -9,49 +9,58 @@ import loginRouter from "./routes/auth/login.js";
 import registerRouter from "./routes/auth/register.js";
 import { env, Status } from "./constants.js";
 import path from "path";
-import {
-	WebSocketConnection,
-	WebSocketEvent,
-	WebSocketOP,
-} from "./websocketEvents.js";
+import { WebSocketEvent, WebSocketOP } from "./websocketEvents.js";
 import { makeRateLimiter } from "./functions/utility.js";
 import { getMessages } from "./database/functions/message.js";
-import { getChannelById, getChannels } from "./database/functions/channel.js";
-import { getGuildById, getGuildChannels } from "./database/functions/guild.js";
-import { clear } from "console";
+import { getChannels } from "./database/functions/channel.js";
+import TenorRouter from "./routes/tenor.js";
 
 // Initialize Express app
 const app = express();
 
+// stored images
+const images = express.static(path.resolve("./public/images"));
+app.use("/images", images);
+
 // JSON body parsing middleware
 app.use(express.json());
-
-// stored images
-app.use(express.static(path.resolve("./public")));
 
 app.set("trust proxy", 1);
 app.get("/ip", (request, response) => response.send(request.ip));
 
-app.use(function (_req, res, next) {
-	res.header("Access-Control-Allow-Credentials", "true");
-	res.header("Access-Control-Allow-Origin", "*");
-	res.header(
-		"Access-Control-Allow-Headers",
-		"Origin, X-Requested-With, Content-Type, Accept, Authorization, X-HTTP-Method-Override, Set-Cookie, Cookie"
-	);
-	res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
+app.use(function (_, res, next) {
+	res
+		.header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
 
-	next();
+	return next();
 });
 
 // only allow frontend site
-app.use(cors({ origin: "s.ily.cat" }));
+app.use(
+	cors({
+		origin: (origin, callback) => {
+			// const originURL = origin ? new URL(origin) : undefined;
+			// const allowedOrigins = ["s.ily.cat", "localhost"];
+			//if (origin) console.log(origin);
+			// if (!originURL || allowedOrigins.includes(originURL.hostname)) {
+			return callback(null, true);
+			// } else {
+			// 	return callback(new Error("Not allowed by CORS"));
+			// }
+		},
+		credentials: true,
+	})
+);
 
 app.use(bodyParser.json({ limit: "25mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 
 // MongoDB connection setup
 mongoose.connect(env.MONGODB_URL!).then(() => console.log("Connected to DB"));
+
+// Tenor Routes
+app.use("/tenor", makeRateLimiter(30), TenorRouter);
 
 // AUTH Routes
 app.use("/auth/login", makeRateLimiter(20), loginRouter);
@@ -63,31 +72,30 @@ const APIMiddleware = async (
 	res: Response,
 	next: NextFunction
 ) => {
-	const [type, token] = req.header("authorization")?.split(" ") || [];
-	if (type.length > 0 && type !== "Bearer") {
+	const [type, token] = req.header("Authorization")?.split(" ") || [];
+	if ((type?.length || 0) >= 0 && type !== "Bearer") {
 		return res.status(401).json({ message: Status["401"] });
 	}
 
-	const isAuthenticated = await AuthenticateToken(token);
-
-	if (isAuthenticated) {
-		res.locals.token = token;
-		return next();
-	} else {
-		return next();
+	if (token) {
+		const isAuthenticated = await AuthenticateToken(token);
+		if (isAuthenticated) res.locals.token = token;
 	}
+
+	return next();
 };
 
-const APIReturner = async (_req: Request, res: Response) => {
+export const APIReturner = async (_: Request, res: Response) => {
 	const code: keyof typeof Status = res.locals.status || "500";
-	const message = Status[code];
 
 	return res
 		.status(parseInt(code))
-		.json(res.locals.json || { message: message });
+		.json(res.locals.json || { message: Status[code] });
 };
 
 app.use("/v1", APIMiddleware, V1Route, APIReturner);
+// default version
+app.use("/", APIMiddleware, V1Route, APIReturner);
 
 // Socket.io server setup
 const server = app.listen(env.PORT!, () => {
@@ -104,10 +112,13 @@ export const wsConnections: Map<
 	}[]
 > = new Map();
 
-const io = new Server(server);
+const io = new Server(server, {
+	cors: {
+		origin: "*",
+	},
+});
 
 io.on("connection", async (socket: Socket) => {
-	console.log(`[Websocket] New client connected in WS ${socket.id}`);
 	if (!socket.handshake.auth) return socket.disconnect(true);
 
 	const type: string | undefined = socket.handshake.auth.type || "Bearer";
@@ -129,10 +140,10 @@ io.on("connection", async (socket: Socket) => {
 		return socket.disconnect(true);
 	}
 
-	const connection: WebSocketConnection = {
-		ws: socket.id,
-		id: user.id,
-	};
+	console.log(
+		`\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id}\x1b[0m connected in WS \x1b[32m${socket.id}\x1b[0m`
+	);
+	socket.join(user.id);
 
 	// Handle new websocket messages
 	socket.on("message", async (message: WebSocketEvent) => {
@@ -140,38 +151,32 @@ io.on("connection", async (socket: Socket) => {
 			case WebSocketOP.HELLO: {
 				const id = user.id;
 
-				const connsForThisUser = wsConnections.get(id) || [];
-
-				connsForThisUser.push({
-					id,
-					ws: connection.ws,
-					socket,
-				});
-
-				wsConnections.set(id, connsForThisUser);
-
 				console.log(
-					`[Websocket] User with ID ${id} connected in WS ${connection.ws}!`
+					`\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id}\x1b[0m (\x1b[32m${socket.id}\x1b[0m) sent \x1b[36mHELLO\x1b[0m`
 				);
 
-				// Send unread messages count mapped by channel ids, if any
-				const unreadDirectMessages = (
-					await getMessages({
-						readBy: { $nin: [user._id] },
-					})
-				)?.filter(async (msg) => {
-					const message = await msg;
-					if (message.guildId) {
-						return user.guilds.includes(
-							(await getGuildById(message.guildId))?._id?.toString() || ""
-						);
+				// get all unread messages
+				const unreadMessages = await getMessages(
+					{
+						readBy: { $nin: [id] },
+						channelId: {
+							$in: user.guilds
+								.map((g) =>
+									g.channels
+										.filter((c) => c.members.includes(id))
+										.map((c) => c.id)
+								)
+								.flat(),
+						},
+					},
+					{
+						_id: 0,
+						channelId: 1,
 					}
-					return (await getChannelById(message.channelId))?.members?.includes(
-						user._id.toString()
-					);
-				});
+				);
 
-				if (!unreadDirectMessages) {
+				// send a dummy to just fill in
+				if (!unreadMessages) {
 					socket.send({
 						op: WebSocketOP.HELLO,
 						d: { unreadMessages: 0 },
@@ -181,13 +186,18 @@ io.on("connection", async (socket: Socket) => {
 
 				const unreadMessagesObject = {} as Record<string, number>;
 
-				for (const msg of unreadDirectMessages) {
-					unreadMessagesObject[(await msg).channelId] =
-						unreadDirectMessages.filter(
-							async (m) => ((await m).channelId = (await msg).channelId)
-						).length;
-				}
+				unreadMessages.map((unread) => {
+					// if the channel id is not in the object, add it
+					if (!unreadMessagesObject[unread.channelId]) {
+						unreadMessagesObject[unread.channelId] = 1;
+					}
+					// set a limit of 150 unreads per channel
+					if (unreadMessagesObject[unread.channelId] >= 150) return;
+					// inc the count
+					unreadMessagesObject[unread.channelId]++;
+				});
 
+				// send the object
 				socket.send({
 					op: WebSocketOP.HELLO,
 					d: { unreadMessages: unreadMessagesObject },
@@ -203,22 +213,17 @@ io.on("connection", async (socket: Socket) => {
 		if (!rooms || !rooms.length || !Array.isArray(rooms)) return;
 
 		const RequestedChannels = rooms.filter((room) => room.startsWith("c"));
-		const RequestedGuilds = rooms.filter((room) => room.startsWith("g"));
-
-		const UserGuilds = user.guilds.map((guild) => guild.id);
-
-		const possibleGuilds = RequestedGuilds.filter((guild) =>
-			UserGuilds.includes(guild)
-		);
 
 		const possibleChannels = (await getChannels(RequestedChannels))?.filter(
-			(channel) => channel.members?.includes(user._id.toString())
+			(channel) => channel.members?.includes(user.id.toString())
 		);
 
-		socket.join([
-			...possibleGuilds,
-			...(possibleChannels || []).map((r) => r.id),
-		]);
+		return socket.join((possibleChannels || []).map((r) => r.id));
+	});
+
+	socket.on("leave", async (room: string) => {
+		if (!room) return;
+		return socket.leave(room);
 	});
 
 	// send first Heartbeat
@@ -231,8 +236,9 @@ io.on("connection", async (socket: Socket) => {
 
 	// Handle client disconnection
 	socket.on("disconnect", () => {
-		console.log("Client disconnected:", socket.id);
-		wsConnections.delete(connection.id);
+		console.log(
+			`\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id} (\x1b[32m${socket.id}\x1b[0m) \x1b[31mDisconnected\x1b[0m`
+		);
 		clearInterval(heartbeatInterval);
 	});
 
