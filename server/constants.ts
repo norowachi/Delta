@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-import { IUser } from "./interfaces.js";
+import { IUser, Roles } from "./interfaces.js";
 import { join } from "path";
 
 config({
@@ -12,14 +12,6 @@ export const env = {
 	PORT: process.env.PORT || 7831,
 	API_ORIGIN: process.env.API_ORIGIN,
 };
-
-export const Roles = {
-	STAFF: 1 << 0, // user is a staff member
-	BOT: 1 << 1, // user is a bot
-	VERIFIED: 1 << 2, // user (whether bot or not) is verified
-};
-
-export type Role = keyof typeof Roles;
 
 export const Delta: IUser = {
 	id: "u0",
