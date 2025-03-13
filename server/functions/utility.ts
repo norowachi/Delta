@@ -1,6 +1,7 @@
 import rateLimit from "express-rate-limit";
 import { Status } from "../constants.js";
 import { NextFunction, Request, Response } from "express";
+import { getUserFromToken } from "./token.js";
 
 /** Delay function
  *
@@ -19,6 +20,13 @@ export const makeRateLimiter = (allowedRequestsPerMinute: number) =>
 		windowMs: 60 * 1000,
 		max: allowedRequestsPerMinute,
 		handler: (_req, res) => res.status(429).json({ message: Status["429"] }),
+		keyGenerator: async (req, res) => {
+			const token = res.locals.token;
+			const user = (token && (await getUserFromToken(token))) || undefined;
+			// if user is authenticated, set the identifier to the user id
+			// if not then set it to the token or the ip address or unknown
+			return user ? user.id : req.ip || token;
+		},
 	});
 
 export function nextRouter(_req: Request, _res: Response, next: NextFunction) {
