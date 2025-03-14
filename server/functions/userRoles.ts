@@ -1,20 +1,22 @@
-import { Roles, Role } from "../constants.js";
+import { Roles } from "../interfaces";
 
-export const getRolesFromValue = (value: number): Role[] => {
-	const roles: Role[] = [];
+type RoleNames = keyof typeof Roles;
+
+export const getRolesFromValue = (value: number): RoleNames[] => {
+	const roles: RoleNames[] = [];
 
 	for (const role in Roles) {
-		const roleValue = Roles[role as Role];
+		const roleValue = Roles[role as RoleNames];
 
 		if (typeof roleValue === "number" && (value & roleValue) === roleValue) {
-			roles.push(role as Role);
+			roles.push(Roles[roleValue] as RoleNames);
 		}
 	}
 
 	return roles;
 };
 
-export const getValueFromRoles = (roles: Role[]): number => {
+export const getValueFromRoles = (roles: RoleNames[]): number => {
 	let value = 0;
 
 	for (const role of roles) {

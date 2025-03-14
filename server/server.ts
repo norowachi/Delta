@@ -14,6 +14,7 @@ import { makeRateLimiter } from "./functions/utility.js";
 import { getMessages } from "./database/functions/message.js";
 import { getChannels } from "./database/functions/channel.js";
 import TenorRouter from "./routes/tenor.js";
+import UpdaterRouter from "./routes/app/update.js";
 
 // Initialize Express app
 const app = express();
@@ -58,6 +59,9 @@ app.use(bodyParser.urlencoded({ extended: true, limit: "25mb" }));
 
 // MongoDB connection setup
 mongoose.connect(env.MONGODB_URL!).then(() => console.log("Connected to DB"));
+
+// Tauri App Updater
+app.use("/app/update", makeRateLimiter(1), UpdaterRouter);
 
 // Tenor Routes
 app.use("/tenor", makeRateLimiter(30), TenorRouter);
