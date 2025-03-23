@@ -28,13 +28,16 @@ messagesRouter.get(
 		const guildId = req.params.guildId;
 		const channelId = req.params.channelId;
 		// the messages' page
-		const page = Number(req.query.page) || 1;
+		const page = Number(req.query.page) || undefined;
 		// after messageId
 		const after = req.query.after?.toString();
 		// before messageId
 		const before = req.query.before?.toString();
+		// around messageId (50 | around | 50)
+		const around = req.query.around?.toString();
 
-		if ((before && after) || ((before || after) && page)) {
+		// error if more than one query is provided
+		if (Object.keys(req.query).length > 1) {
 			res.locals.status = "400";
 			return next();
 		}
@@ -65,7 +68,7 @@ messagesRouter.get(
 
 		let messages: IMessage[] | null = [];
 
-		if (!after && !before) {
+		if (page) {
 			if (page > Math.ceil(channel.messages / multip)) {
 				res.locals.status = "400";
 				return next();
@@ -74,24 +77,18 @@ messagesRouter.get(
 			messages = await getChannelMessages(channel, 100, (page - 1) * multip);
 		} else if (after) {
 			// get messages after the message
-			const message = await getMessageById({
-				guildId,
-				channelId,
-				messageId: after,
-			});
-
-			if (!message) {
+			const timestamp = getTimestampFromSnowflakeID(after);
+			if (timestamp === 0n) {
 				res.locals.status = "404";
 				return next();
 			}
 
-			const timestamp = getTimestampFromSnowflakeID(message.id);
 			// get messages after the message
 			messages = await getMessages(
 				{
 					guildId,
 					channelId,
-					createdAt: { $gt: Number(timestamp) * 1000 },
+					createdAt: { $gt: new Date(Number(timestamp) * 1000) },
 				},
 				undefined,
 				{
@@ -101,44 +98,86 @@ messagesRouter.get(
 			);
 		} else if (before) {
 			// get messages before the message
-			const message = await getMessageById({
-				guildId,
-				channelId,
-				messageId: before,
-			});
-
-			if (!message) {
+			const timestamp = getTimestampFromSnowflakeID(before);
+			if (timestamp === 0n) {
 				res.locals.status = "404";
 				return next();
 			}
 
-			const timestamp = getTimestampFromSnowflakeID(message.id);
 			// get messages before the message
 			messages = await getMessages(
 				{
 					guildId,
 					channelId,
-					createdAt: { $lt: Number(timestamp) * 1000 },
+					createdAt: { $lt: new Date(Number(timestamp) * 1000) },
 				},
 				undefined,
 				{
 					sort: { createdAt: 1 },
+					limit: 100,
 				}
+			);
+		} else if (around) {
+			const timestamp = getTimestampFromSnowflakeID(around);
+			if (timestamp === 0n) {
+				res.locals.status = "404";
+				return next();
+			}
+			const date = new Date(Number(timestamp) * 1000);
+
+			// get messages around the message
+			const MessagesBefore =
+				(await getMessages(
+					{
+						guildId,
+						channelId,
+						createdAt: { $lt: date },
+					},
+					undefined,
+					{
+						sort: { createdAt: -1 },
+						limit: 50,
+					}
+				)) || [];
+
+			const MessagesAfter =
+				(await getMessages(
+					{
+						guildId,
+						channelId,
+						createdAt: { $gte: date },
+					},
+					undefined,
+					{
+						sort: { createdAt: 1 },
+						limit: 50,
+					}
+				)) || [];
+			console.log(MessagesAfter[0].createdAt.getTime());
+			messages = [...MessagesBefore, ...MessagesAfter].sort(
+				(a, b) =>
+					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
 			);
 		}
 
-		// No messages, return internal error
+		// No message, return empty array
 		if (!messages) {
-			res.locals.status = "500";
+			res.locals.status = "404";
+			res.locals.json = {
+				currentPage: page,
+				pages: 1,
+				messages: [],
+			};
 			return next();
 		}
 
 		// return the messages per page
 		res.locals.status = "200";
 		res.locals.json = {
+			// TODO: better pagaination and page numbering
 			currentPage: page,
 			pages: Math.ceil(channel.messages / multip), // max pages
-			messages: await Promise.all(messages?.map(formatMessage)),
+			messages: await Promise.all(messages.map(formatMessage)),
 		};
 		return next();
 	},
@@ -183,7 +222,7 @@ messagesRouter.get(
 );
 
 // start; other related routes
-messagesRouter.use("/", messageCreateRouter);
+messagesRouter.use("/", messageCreateRouter, nextRouter);
 // end.
 
 export default messagesRouter;

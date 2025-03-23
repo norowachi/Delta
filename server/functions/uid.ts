@@ -32,10 +32,14 @@ export const generateSnowflakeID = (type: "u" | "c" | "g" | "m"): string => {
 };
 
 export const getTimestampFromSnowflakeID = (snowflakeID: string): bigint => {
-	// Extract timestamp bits by shifting right by 22 bits
-	const timestampBits = BigInt(snowflakeID.slice(1)) >> 22n; //remove the 1st character - as it is an Identifier (check README)
-	// Add epoch to get the actual timestamp and send
-	return timestampBits + EPOCH;
+	try {
+		// Extract timestamp bits by shifting right by 22 bits
+		const timestampBits = BigInt(snowflakeID.slice(1)) >> 22n; //remove the 1st character - as it is an Identifier (check README)
+		// Add epoch to get the actual timestamp and send
+		return timestampBits + EPOCH;
+	} catch {
+		return 0n;
+	}
 };
 
 const getTimestamp = (): bigint => {
