@@ -97,12 +97,14 @@ messagesRouter.get(
 				}
 			);
 		} else if (before) {
+			console.log(before);
 			// get messages before the message
 			const timestamp = getTimestampFromSnowflakeID(before);
 			if (timestamp === 0n) {
 				res.locals.status = "404";
 				return next();
 			}
+			console.log(timestamp);
 
 			// get messages before the message
 			messages = await getMessages(
@@ -113,7 +115,7 @@ messagesRouter.get(
 				},
 				undefined,
 				{
-					sort: { createdAt: 1 },
+					sort: { createdAt: -1 },
 					limit: 100,
 				}
 			);
@@ -153,23 +155,26 @@ messagesRouter.get(
 						limit: 50,
 					}
 				)) || [];
-			console.log(MessagesAfter[0].createdAt.getTime());
-			messages = [...MessagesBefore, ...MessagesAfter].sort(
+			messages = [...MessagesBefore, ...MessagesAfter];
+		}
+
+		console.log(
+			"page",
+			page,
+			"after",
+			after,
+			"before",
+			before,
+			"around",
+			around
+		);
+
+		if (!messages) messages = [];
+		else
+			messages.sort(
 				(a, b) =>
 					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
 			);
-		}
-
-		// No message, return empty array
-		if (!messages) {
-			res.locals.status = "404";
-			res.locals.json = {
-				currentPage: page,
-				pages: 1,
-				messages: [],
-			};
-			return next();
-		}
 
 		// return the messages per page
 		res.locals.status = "200";
