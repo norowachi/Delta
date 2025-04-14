@@ -2,7 +2,7 @@ import express, { Response } from "express";
 import { getGuildById } from "../../../database/functions/guild.js";
 import { getUserFromToken } from "../../../functions/token.js";
 import { Guild } from "../../../database/schema/guild.js";
-import { makeRateLimiter } from "../../../functions/utility.js";
+import { makeRateLimiter, nextRouter } from "../../../functions/utility.js";
 
 const guildDeleteRouter = express.Router();
 
@@ -29,5 +29,6 @@ guildDeleteRouter.delete(
 		console.log("require deletion, id:", guildId);
 		res.locals.status = "202";
 		return next();
-	}
+	},
+	nextRouter
 );

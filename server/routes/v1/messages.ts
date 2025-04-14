@@ -11,7 +11,6 @@ import { getChannelById } from "../../database/functions/channel.js";
 import messageCreateRouter from "./messages/create.js";
 import { formatMessage } from "../../functions/formatters.js";
 import { IMessage } from "../../interfaces.js";
-import { getTimestampFromSnowflakeID } from "../../functions/uid.js";
 
 const messagesRouter = express.Router();
 
@@ -76,19 +75,17 @@ messagesRouter.get(
 			// get messages
 			messages = await getChannelMessages(channel, 100, (page - 1) * multip);
 		} else if (after) {
-			// get messages after the message
-			const timestamp = getTimestampFromSnowflakeID(after);
-			if (timestamp === 0n) {
-				res.locals.status = "404";
+			if (!after.startsWith("m")) {
+				res.locals.status = "400";
 				return next();
 			}
 
 			// get messages after the message
 			messages = await getMessages(
 				{
+					id: { $gt: after },
 					guildId,
 					channelId,
-					createdAt: { $gt: new Date(Number(timestamp) * 1000) },
 				},
 				undefined,
 				{
@@ -97,21 +94,17 @@ messagesRouter.get(
 				}
 			);
 		} else if (before) {
-			console.log(before);
-			// get messages before the message
-			const timestamp = getTimestampFromSnowflakeID(before);
-			if (timestamp === 0n) {
-				res.locals.status = "404";
+			if (!before.startsWith("m")) {
+				res.locals.status = "400";
 				return next();
 			}
-			console.log(timestamp);
 
 			// get messages before the message
 			messages = await getMessages(
 				{
+					id: { $lt: before },
 					guildId,
 					channelId,
-					createdAt: { $lt: new Date(Number(timestamp) * 1000) },
 				},
 				undefined,
 				{
@@ -120,20 +113,18 @@ messagesRouter.get(
 				}
 			);
 		} else if (around) {
-			const timestamp = getTimestampFromSnowflakeID(around);
-			if (timestamp === 0n) {
-				res.locals.status = "404";
+			if (!around.startsWith("m")) {
+				res.locals.status = "400";
 				return next();
 			}
-			const date = new Date(Number(timestamp) * 1000);
 
 			// get messages around the message
 			const MessagesBefore =
 				(await getMessages(
 					{
+						id: { $lt: around },
 						guildId,
 						channelId,
-						createdAt: { $lt: date },
 					},
 					undefined,
 					{
@@ -145,9 +136,9 @@ messagesRouter.get(
 			const MessagesAfter =
 				(await getMessages(
 					{
+						id: { $gte: around },
 						guildId,
 						channelId,
-						createdAt: { $gte: date },
 					},
 					undefined,
 					{
@@ -155,7 +146,10 @@ messagesRouter.get(
 						limit: 50,
 					}
 				)) || [];
-			messages = [...MessagesBefore, ...MessagesAfter];
+			messages = [...MessagesBefore, ...MessagesAfter].sort(
+				(a, b) =>
+					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+			);
 		}
 
 		console.log(
@@ -170,14 +164,8 @@ messagesRouter.get(
 		);
 
 		if (!messages) messages = [];
-		else
-			messages.sort(
-				(a, b) =>
-					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-			);
-
 		// return the messages per page
-		res.locals.status = "200";
+		else res.locals.status = "200";
 		res.locals.json = {
 			// TODO: better pagaination and page numbering
 			currentPage: page,

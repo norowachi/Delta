@@ -1,7 +1,7 @@
 import express, { Response } from "express";
 import { getGuildById } from "../../../database/functions/guild.js";
 import { getUserFromToken } from "../../../functions/token.js";
-import { makeRateLimiter } from "../../../functions/utility.js";
+import { makeRateLimiter, nextRouter } from "../../../functions/utility.js";
 
 const MembersRouter = express.Router();
 
@@ -55,7 +55,8 @@ MembersRouter.delete(
 
 		res.locals.status = "200";
 		return next();
-	}
+	},
+	nextRouter
 );
 
 export default MembersRouter;

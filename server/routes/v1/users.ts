@@ -1,7 +1,7 @@
 import express, { Response } from "express";
 import { getUserFromToken } from "../../functions/token.js";
 import { getUserById } from "../../database/functions/user.js";
-import { makeRateLimiter } from "../../functions/utility.js";
+import { makeRateLimiter, nextRouter } from "../../functions/utility.js";
 
 const usersRouter = express.Router();
 
@@ -60,13 +60,14 @@ usersRouter.get(
 			system: user.system,
 		};
 		return next();
-	}
+	},
+	nextRouter
 );
 
 usersRouter.patch(
 	"/@me",
 	makeRateLimiter(20),
-	async (req, res: Response, next) => {
+	async (_, res: Response, next) => {
 		if (!res.locals.token) {
 			res.locals.status = "401";
 			return next();
@@ -82,7 +83,8 @@ usersRouter.patch(
 		res.locals.status = "200";
 		res.locals.json = {};
 		return next();
-	}
+	},
+	nextRouter
 );
 
 // Export the users router

@@ -1,5 +1,5 @@
 import express, { Response } from "express";
-import { makeRateLimiter } from "../../../functions/utility.js";
+import { makeRateLimiter, nextRouter } from "../../../functions/utility.js";
 import { createMessage } from "../../../database/functions/message.js";
 import { IMessage } from "../../../interfaces.js";
 import { getUserFromToken } from "../../../functions/token.js";
@@ -132,7 +132,8 @@ messageCreateRouter.post(
 		} as WebSocketEvent);
 
 		return next();
-	}
+	},
+	nextRouter
 );
 
 export default messageCreateRouter;

@@ -1,6 +1,6 @@
 import express, { Response } from "express";
 import { createGuild } from "../../../database/functions/guild.js";
-import { makeRateLimiter } from "../../../functions/utility.js";
+import { makeRateLimiter, nextRouter } from "../../../functions/utility.js";
 
 const guildCreateRouter = express.Router();
 
@@ -34,5 +34,6 @@ guildCreateRouter.post(
 			deleted: result.deleted,
 		};
 		return next();
-	}
+	},
+	nextRouter
 );
