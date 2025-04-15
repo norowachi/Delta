@@ -146,26 +146,18 @@ messagesRouter.get(
 						limit: 50,
 					}
 				)) || [];
-			messages = [...MessagesBefore, ...MessagesAfter].sort(
+			messages = [...MessagesBefore, ...MessagesAfter];
+		}
+
+		if (!messages) messages = [];
+		else
+			messages.sort(
 				(a, b) =>
 					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
 			);
-		}
 
-		console.log(
-			"page",
-			page,
-			"after",
-			after,
-			"before",
-			before,
-			"around",
-			around
-		);
-
-		if (!messages) messages = [];
 		// return the messages per page
-		else res.locals.status = "200";
+		res.locals.status = "200";
 		res.locals.json = {
 			// TODO: better pagaination and page numbering
 			currentPage: page,
