@@ -2,6 +2,7 @@ import express, { Response } from "express";
 import { getUserFromToken } from "../../functions/token.js";
 import { getUserById } from "../../database/functions/user.js";
 import { makeRateLimiter, nextRouter } from "../../functions/utility.js";
+import { formatUser } from "../../functions/formatters.js";
 
 const usersRouter = express.Router();
 
@@ -26,19 +27,9 @@ usersRouter.get(
 
 			// return public user data + protected private info
 			res.locals.status = "200";
-			res.locals.json = {
-				id: user.id,
-				username: user.username,
-				handle: user.handle,
-				avatar: user.avatar,
-				roles: user.roles,
-				password: "*".repeat(8),
-				disabled: user.disabled,
-				deleted: user.deleted,
-				bot: user.bot,
-				system: user.system,
-				guilds: user.guilds,
-			};
+			res.locals.json = formatUser(
+				Object.assign(user, { SHOW_PRIVATE_DATA: true })
+			);
 			return next();
 		}
 
@@ -49,16 +40,7 @@ usersRouter.get(
 		}
 		// return public user data
 		res.locals.status = "200";
-		res.locals.json = {
-			id: user.id,
-			username: user.username,
-			handle: user.handle,
-			avatar: user.avatar,
-			roles: user.roles,
-			deleted: user.deleted,
-			bot: user.bot,
-			system: user.system,
-		};
+		res.locals.json = formatUser(user);
 		return next();
 	},
 	nextRouter

@@ -1,5 +1,5 @@
 import { Document } from "mongoose";
-import { IChannel, IGuild, IMessage } from "../interfaces";
+import { IChannel, IGuild, IMessage, IUser } from "../interfaces";
 
 export async function formatGuild(guild: IGuild & Document) {
 	const populatedChannels = await guild.populate({
@@ -79,4 +79,26 @@ export async function formatMessage(message: IMessage | (IMessage & Document)) {
 		createdAt: m.createdAt,
 		mentions: m.mentions,
 	} as IMessage;
+}
+
+export function formatUser(
+	user: (IUser | (IUser & Document)) & { SHOW_PRIVATE_DATA?: boolean }
+) {
+	const privateData = {
+		password: "*".repeat(8),
+		guilds: user.guilds,
+	};
+
+	return {
+		...(user.SHOW_PRIVATE_DATA ? privateData : {}),
+		id: user.id,
+		username: user.username,
+		handle: user.handle,
+		avatar: user.avatar,
+		roles: user.roles,
+		disabled: user.disabled,
+		deleted: user.deleted,
+		bot: user.bot,
+		system: user.system,
+	} as IUser;
 }

@@ -2,11 +2,43 @@ import express, { Response } from "express";
 import { getGuildById } from "../../../database/functions/guild.js";
 import { getUserFromToken } from "../../../functions/token.js";
 import { makeRateLimiter, nextRouter } from "../../../functions/utility.js";
+import { User } from "../../../database/schema/user.js";
+import { IUser } from "../../../interfaces.js";
+import { formatUser } from "../../../functions/formatters.js";
 
-const MembersRouter = express.Router();
+const GuildMembersRouter = express.Router();
+
+// get guild members
+GuildMembersRouter.get(
+	"/:guildId/members",
+	makeRateLimiter(20),
+	async (req, res: Response, next) => {
+		if (!res.locals.token) {
+			res.locals.status = "401";
+			return next();
+		}
+		const guildId = req.params.guildId;
+		const guild = await getGuildById(guildId);
+		const user = await getUserFromToken(res.locals.token);
+		if (!user || !guild) {
+			res.locals.status = "400";
+			return next();
+		}
+
+		// TODO: implement permissions system
+		// and do the member fetching from here or something
+		const members = await User.find<IUser>({ id: { $in: guild.members } });
+
+		res.locals.status = "200";
+		res.locals.json = {
+			members: members.map(formatUser),
+		};
+		return next();
+	}
+);
 
 // add member to guild
-MembersRouter.post(
+GuildMembersRouter.post(
 	"/:guildId/members",
 	makeRateLimiter(20),
 	async (req, res: Response, next) => {
@@ -30,7 +62,7 @@ MembersRouter.post(
 	}
 );
 
-MembersRouter.delete(
+GuildMembersRouter.delete(
 	"/:guildId/members",
 	makeRateLimiter(40),
 	async (req, res: Response, next) => {
@@ -59,4 +91,4 @@ MembersRouter.delete(
 	nextRouter
 );
 
-export default MembersRouter;
+export default GuildMembersRouter;

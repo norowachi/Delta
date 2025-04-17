@@ -86,6 +86,8 @@ const APIMiddleware = async (
 };
 
 export const APIReturner = async (_: Request, res: Response) => {
+	if (!res.writable) return;
+	
 	const code: keyof typeof Status = res.locals.status || "500";
 
 	return res

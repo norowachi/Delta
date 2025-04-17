@@ -6,6 +6,7 @@ import {
 import { getUserFromToken } from "../../functions/token.js";
 import { makeRateLimiter, nextRouter } from "../../functions/utility.js";
 import { formatChannel, formatGuild } from "../../functions/formatters.js";
+import GuildMembersRouter from "./guilds/members.js";
 
 const guildsRouter = express.Router();
 
@@ -103,7 +104,7 @@ guildsRouter.get(
 );
 
 // start; other guild related routes
-
+guildsRouter.use(GuildMembersRouter);
 // end.
 
 export default guildsRouter;
