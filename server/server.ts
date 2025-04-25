@@ -18,6 +18,8 @@ import TenorRouter from "./routes/tenor.js";
 // Initialize Express app
 const app = express();
 
+app.all("/app", (_,res) => res.redirect("https://s.ily.cat/"));
+
 // stored images
 const images = express.static(path.resolve("./public/images"));
 app.use("/images", images);
@@ -87,7 +89,7 @@ const APIMiddleware = async (
 
 export const APIReturner = async (_: Request, res: Response) => {
 	if (!res.writable) return;
-	
+
 	const code: keyof typeof Status = res.locals.status || "500";
 
 	return res
