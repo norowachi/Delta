@@ -9,7 +9,7 @@ import loginRouter from "./routes/auth/login.js";
 import registerRouter from "./routes/auth/register.js";
 import { env, Status } from "./constants.js";
 import path from "path";
-import { WebSocketEvent, WebSocketOP } from "./websocketEvents.js";
+import { WebSocketEvent, WebSocketOP } from "./interfaces.js";
 import { makeRateLimiter } from "./functions/utility.js";
 import { getMessages } from "./database/functions/message.js";
 import { getChannels } from "./database/functions/channel.js";

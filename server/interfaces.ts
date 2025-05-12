@@ -3,7 +3,7 @@ export enum Roles {
 	STAFF = 1 << 0, // user is a staff member
 	BOT = 1 << 1, // user is a bot
 	VERIFIED = 1 << 2, // user (whether bot or not) is verified
-};
+}
 
 export interface PrivateUser {
 	id: string;
@@ -105,4 +105,26 @@ export interface TokenPayload {
 	handle: string;
 	password: string;
 	exp: number;
+}
+
+//! Websocket shit
+export enum WebSocketOP {
+	HELLO = 0,
+	MESSAGE_CREATE = 1,
+	MESSAGE_UPDATE = 2,
+	MESSAGE_DELETE = 3,
+}
+
+export interface WebSocketEvent {
+	op: WebSocketOP;
+	d: any;
+}
+
+export interface WSHelloPayload {
+	op: WebSocketOP.HELLO;
+}
+
+export interface WebSocketConnection {
+	ws: string;
+	id: string;
 }

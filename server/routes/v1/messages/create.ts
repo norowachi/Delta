@@ -1,10 +1,9 @@
 import express, { Response } from "express";
 import { makeRateLimiter, nextRouter } from "../../../functions/utility.js";
 import { createMessage } from "../../../database/functions/message.js";
-import { IMessage } from "../../../interfaces.js";
+import { IMessage, WebSocketEvent, WebSocketOP } from "../../../interfaces.js";
 import { getUserFromToken } from "../../../functions/token.js";
 import io from "../../../server.js";
-import { WebSocketEvent, WebSocketOP } from "../../../websocketEvents.js";
 import { getChannelById } from "../../../database/functions/channel.js";
 import { formatMessage } from "../../../functions/formatters.js";
 import { getUsers } from "../../../database/functions/user.js";
