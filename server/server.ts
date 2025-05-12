@@ -18,7 +18,7 @@ import TenorRouter from "./routes/tenor.js";
 // Initialize Express app
 const app = express();
 
-app.all("/app", (_,res) => res.redirect("https://s.ily.cat/"));
+app.all("/app", (_, res) => res.redirect("https://s.ily.cat/"));
 
 // stored images
 const images = express.static(path.resolve("./public/images"));
@@ -91,6 +91,8 @@ export const APIReturner = async (_: Request, res: Response) => {
 	if (!res.writable) return;
 
 	const code: keyof typeof Status = res.locals.status || "500";
+
+	console.log(res.locals.status, code);
 
 	return res
 		.status(parseInt(code))
@@ -241,7 +243,7 @@ io.on("connection", async (socket: Socket) => {
 	// Handle client disconnection
 	socket.on("disconnect", () => {
 		console.log(
-			`\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id} (\x1b[32m${socket.id}\x1b[0m) \x1b[31mDisconnected\x1b[0m`
+			`\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id}\x1b[0m (\x1b[32m${socket.id}\x1b[0m) \x1b[31mDisconnected\x1b[0m`
 		);
 		clearInterval(heartbeatInterval);
 	});

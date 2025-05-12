@@ -11,6 +11,7 @@ import { getChannelById } from "../../database/functions/channel.js";
 import messageCreateRouter from "./messages/create.js";
 import { formatMessage } from "../../functions/formatters.js";
 import { IMessage } from "../../interfaces.js";
+import messageDeleteRouter from "./messages/delete.js";
 
 const messagesRouter = express.Router();
 
@@ -207,7 +208,7 @@ messagesRouter.get(
 );
 
 // start; other related routes
-messagesRouter.use("/", messageCreateRouter, nextRouter);
+messagesRouter.use(messageCreateRouter, messageDeleteRouter, nextRouter);
 // end.
 
 export default messagesRouter;

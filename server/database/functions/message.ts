@@ -16,7 +16,7 @@ export const getMessageById = async ({
 	channelId: string;
 	messageId: string;
 }): Promise<(IMessage & Document) | null> => {
-	const message = await Message.findOne({
+	const message = await Message.findOne<IMessage & Document>({
 		id: messageId,
 		guildId: guildId,
 		channelId: channelId,
@@ -27,7 +27,7 @@ export const getMessageById = async ({
 	const populated: Omit<IMessage, "author" | "readBy"> & {
 		author: pubUser;
 		readBy: pubUser[];
-	} = message.populate("author");
+	} = await message.populate("author");
 
 	message.author = populated.author;
 	return message;
