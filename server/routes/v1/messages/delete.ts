@@ -1,9 +1,15 @@
 import express, { Response } from "express";
 import { makeRateLimiter, nextRouter } from "../../../functions/utility.js";
 import { getMessageById } from "../../../database/functions/message.js";
-import { Roles, WebSocketEvent, WebSocketOP } from "../../../interfaces.js";
+import {
+	IChannel,
+	Roles,
+	WebSocketEvent,
+	WebSocketOP,
+} from "../../../interfaces.js";
 import { getUserFromToken } from "../../../functions/token.js";
 import io from "../../../server.js";
+import { Channel } from "../../../database/schema/channel.js";
 
 const messageDeleteRouter = express.Router();
 
@@ -53,6 +59,11 @@ messageDeleteRouter.delete(
 		// else delete the message and send confirmation
 		try {
 			await message.deleteOne();
+			await Channel.updateOne<IChannel>(
+				{ id: message.channelId },
+				{ $inc: { messages: -1 } }
+			);
+
 			res.locals.status = "204";
 
 			// return the mesasge id with an event for client to delete the message from the UI
