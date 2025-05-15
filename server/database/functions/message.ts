@@ -6,6 +6,7 @@ import { Document, FilterQuery, ProjectionType, QueryOptions } from "mongoose";
 import { Channel } from "../schema/channel.js";
 import { formatMessage } from "../../functions/formatters.js";
 import { getChannelById } from "./channel.js";
+import { Users } from "../../constants.js";
 
 export const getMessageById = async ({
 	guildId = "@me",
@@ -29,7 +30,7 @@ export const getMessageById = async ({
 		readBy: pubUser[];
 	} = await message.populate("author");
 
-	message.author = populated.author;
+	message.author = populated.author || Users.Deleted;
 	return message;
 };
 

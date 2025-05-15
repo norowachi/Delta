@@ -1,5 +1,6 @@
 import { Document } from "mongoose";
 import { IChannel, IGuild, IMessage, IUser } from "../interfaces";
+import { Users } from "../constants";
 
 export async function formatGuild(guild: IGuild & Document) {
 	const populatedChannels = await guild.populate({
@@ -53,7 +54,9 @@ export async function formatChannel(channel: IChannel | (IChannel & Document)) {
 export async function formatMessage(message: IMessage | (IMessage & Document)) {
 	const m =
 		"populate" in message && !message.populated("author")
-			? await message.populate("author").catch(() => {})
+			? await message.populate("author").catch(() => {
+					message.author = Users.Deleted;
+			  })
 			: message;
 	if (!m) return null;
 

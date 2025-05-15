@@ -92,8 +92,6 @@ export const APIReturner = async (_: Request, res: Response) => {
 
 	const code: keyof typeof Status = res.locals.status || "500";
 
-	console.log(res.locals.status, code);
-
 	return res
 		.status(parseInt(code))
 		.json(res.locals.json || { message: Status[code] });

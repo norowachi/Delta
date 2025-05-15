@@ -13,19 +13,35 @@ export const env = {
 	TENOR_API_KEY: process.env.TENOR_API_KEY,
 };
 
-export const Delta: IUser = {
-	id: "u0",
-	username: "delta",
-	handle: "delta",
-	bot: true,
-	roles: Roles.STAFF | Roles.BOT | Roles.VERIFIED,
-	system: true,
-	avatar: "",
-	disabled: false,
-	deleted: false,
-	password: "",
-	token: "",
-	guilds: [],
+export const Users = {
+	Delta: {
+		id: "u0",
+		username: "delta",
+		handle: "delta",
+		bot: true,
+		roles: Roles.STAFF | Roles.BOT | Roles.VERIFIED,
+		system: true,
+		avatar: "",
+		disabled: false,
+		deleted: false,
+		password: "",
+		token: "",
+		guilds: [],
+	} as IUser,
+	Deleted: {
+		id: "u1",
+		username: "deleted",
+		handle: "deleted",
+		bot: false,
+		roles: Roles.VERIFIED,
+		system: true,
+		avatar: "",
+		disabled: false,
+		deleted: true,
+		password: "",
+		token: "",
+		guilds: [],
+	} as IUser,
 };
 
 export const Status = {
