@@ -58,14 +58,19 @@ export const getKey = async () => {
         const newKey = await rotateKey();
         // decrypt the data key to reencrypt
         const kd = await jose.JWE.createDecrypt(enckeystore).decrypt(
-          datakey!.kdata,
+          datakey!.kdata
         );
         // the key's data
         const kdata = kd.plaintext.toString("utf-8");
+        // add the new key to the keystore
+        await enckeystore.add(
+          await jose.JWK.asKey(newKey)
+        );
+
         // reencrypt the data key with the new key
         const enckd = await jose.JWE.createEncrypt(
           { format: "compact" },
-          newKey,
+          enckeystore.all()
         )
           .update(kdata)
           .final();
@@ -87,11 +92,11 @@ export const getKey = async () => {
 
     // decrypt the data key and send it back
     const kd = await jose.JWE.createDecrypt(enckeystore).decrypt(
-      datakey!.kdata,
+      datakey!.kdata
     );
     return await jose.JWK.asKey(
       JSON.parse(kd.plaintext.toString("utf8")),
-      "json",
+      "json"
     );
   } catch (err) {
     throw err;
