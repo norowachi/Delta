@@ -1,49 +1,47 @@
 {
-	"name": "delta",
-	"version": "1.0.0",
-	"description": "",
-	"main": "dist/server.js",
-	"type": "module",
-	"author": "Noro95",
-	"license": "UNLICENSED",
-	"scripts": {
-		"start": "node dist/server.js",
-		"build": "tsc",
-		"test": "ts-node server/server.ts"
-	},
-	"dependencies": {
-		"@node-fetch-cache/redis": "^1.0.0",
-		"bcrypt": "^5.1.1",
-		"body-parser": "^1.20.3",
-		"cors": "^2.8.5",
-		"dotenv": "^16.5.0",
-		"express": "^4.21.2",
-		"express-rate-limit": "^7.5.0",
-		"mongoose": "^8.14.2",
-		"node-fetch-cache": "^5.0.2",
-		"node-jose": "^2.2.0",
-		"path": "^0.12.7",
-		"socket.io": "^4.8.1"
-	},
-	"devDependencies": {
-		"@types/bcrypt": "^5.0.2",
-		"@types/body-parser": "^1.19.5",
-		"@types/connect-mongodb-session": "^2.4.8",
-		"@types/cookie-parser": "^1.4.8",
-		"@types/cors": "^2.8.18",
-		"@types/express": "^4.17.21",
-		"@types/express-session": "^1.18.1",
-		"@types/md5": "^2.3.5",
-		"@types/node-jose": "^1.1.13",
-		"typescript": "^5.8.3"
-	},
-	"packageManager": "pnpm@10.10.0",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/Noro95/Delta.git"
-	},
-	"bugs": {
-		"url": "https://github.com/Noro95/Delta/issues"
-	},
-	"homepage": "https://github.com/Noro95/Delta#readme"
+  "name": "delta",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/server.js",
+  "type": "module",
+  "author": "norowachi",
+  "license": "MIT",
+  "scripts": {
+    "start": "node dist/server.js",
+    "build": "tsc",
+    "test": "ts-node server/server.ts"
+  },
+  "dependencies": {
+    "@node-fetch-cache/redis": "^1.0.0",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "mongoose": "^8.15.2",
+    "node-fetch-cache": "^5.0.2",
+    "node-jose": "^2.2.0",
+    "path": "^0.12.7",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/body-parser": "^1.19.6",
+    "@types/connect-mongodb-session": "^2.4.8",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.23",
+    "@types/md5": "^2.3.5",
+    "@types/node-jose": "^1.1.13",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@10.10.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/norowachi/Delta.git"
+  },
+  "bugs": {
+    "url": "https://github.com/norowachi/Delta/issues"
+  },
+  "homepage": "https://github.com/norowachi/Delta#readme"
 }

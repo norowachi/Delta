@@ -1,3 +1,10 @@
+# Services Needed
+
+1. Docker
+   > for starting the backend server & mongodb
+2. Redis Instance
+   > for handling the tenor API cache
+
 # Notes to remember:
 
 - u{id} -> user

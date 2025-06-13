@@ -9,29 +9,29 @@ import { getChannelById } from "./channel.js";
 import { Users } from "../../constants.js";
 
 export const getMessageById = async ({
-	guildId = "@me",
-	channelId,
-	messageId,
+  guildId = "@me",
+  channelId,
+  messageId,
 }: {
-	guildId: string;
-	channelId: string;
-	messageId: string;
+  guildId: string;
+  channelId: string;
+  messageId: string;
 }): Promise<(IMessage & Document) | null> => {
-	const message = await Message.findOne<IMessage & Document>({
-		id: messageId,
-		guildId: guildId,
-		channelId: channelId,
-	});
-	if (!message) return null;
+  const message = await Message.findOne<IMessage & Document>({
+    id: messageId,
+    guildId: guildId,
+    channelId: channelId,
+  });
+  if (!message) return null;
 
-	type pubUser = Omit<IUser, "password" | "token">;
-	const populated: Omit<IMessage, "author" | "readBy"> & {
-		author: pubUser;
-		readBy: pubUser[];
-	} = await message.populate("author");
+  type pubUser = Omit<IUser, "password" | "token">;
+  const populated: Omit<IMessage, "author" | "readBy"> & {
+    author: pubUser;
+    readBy: pubUser[];
+  } = await message.populate("author");
 
-	message.author = populated.author || Users.Deleted;
-	return message;
+  message.author = populated.author || Users.Deleted;
+  return message;
 };
 
 /**
@@ -39,77 +39,77 @@ export const getMessageById = async ({
  * @param author - author uid, not mongo ObjectId
  */
 export const createMessage = async (data: {
-	content?: string;
-	embeds?: IEmbed[];
-	author: string | (IMessage["author"] & Document);
-	channelId: string;
-	guildId: string | null;
-	ephemeral?: boolean;
-	mentions?: Map<string, string>;
+  content?: string;
+  embeds?: IEmbed[];
+  author: string | (IMessage["author"] & Document);
+  channelId: string;
+  guildId: string | null;
+  ephemeral?: boolean;
+  mentions?: Map<string, string>;
 }): Promise<(IMessage & Document) | null> => {
-	const author =
-		typeof data.author === "string"
-			? await User.findOne<IUser & Document>({ id: data.author })
-			: data.author;
-	if (!author || (!data.content && !data.embeds)) return null;
+  const author =
+    typeof data.author === "string"
+      ? await User.findOne<IUser & Document>({ id: data.author })
+      : data.author;
+  if (!author || (!data.content && !data.embeds)) return null;
 
-	const newMessage = new Message({
-		id: generateSnowflakeID("m"),
-		content: data.content,
-		embeds: data.embeds,
-		author: author._id,
-		system: author.system,
-		channelId: data.channelId,
-		guildId: data.guildId,
-		ephemeral: author.bot ? data.ephemeral : false,
-		readBy: [author.id],
-		mentions: data.mentions,
-	});
+  const newMessage = new Message({
+    id: generateSnowflakeID("m"),
+    content: data.content,
+    embeds: data.embeds,
+    author: author._id,
+    system: author.system,
+    channelId: data.channelId,
+    guildId: data.guildId,
+    ephemeral: author.bot ? data.ephemeral : false,
+    readBy: [author.id],
+    mentions: data.mentions,
+  });
 
-	await Channel.updateOne<IChannel>(
-		{ id: data.channelId },
-		{ $inc: { messages: 1 } }
-	);
+  await Channel.updateOne<IChannel>(
+    { id: data.channelId },
+    { $inc: { messages: 1 } },
+  );
 
-	await newMessage.save();
-	return newMessage;
+  await newMessage.save();
+  return newMessage;
 };
 
 export const getChannelMessages = async (
-	channel: string | IChannel,
-	limit: number = 100,
-	offset: number = 0
+  channel: string | IChannel,
+  limit: number = 100,
+  offset: number = 0,
 ): Promise<IMessage[] | null> => {
-	const dbChannel =
-		typeof channel === "string" ? await getChannelById(channel) : channel;
-	if (!dbChannel) return null;
+  const dbChannel =
+    typeof channel === "string" ? await getChannelById(channel) : channel;
+  if (!dbChannel) return null;
 
-	// TODO: decide whether to use offset or not
-	// and if used, decide whether to use from the end or the beginning
-	const safeLimit = Math.min(limit, Math.max(0, dbChannel.messages - offset)),
-		theoritical = dbChannel.messages - safeLimit,
-		skip = Math.max(0, theoritical - offset);
+  // TODO: decide whether to use offset or not
+  // and if used, decide whether to use from the end or the beginning
+  const safeLimit = Math.min(limit, Math.max(0, dbChannel.messages - offset)),
+    theoritical = dbChannel.messages - safeLimit,
+    skip = Math.max(0, theoritical - offset);
 
-	const messages = await getMessages({ channelId: dbChannel.id }, undefined, {
-		sort: { createdAt: 1 },
-		limit: safeLimit,
-		skip,
-	});
+  const messages = await getMessages({ channelId: dbChannel.id }, undefined, {
+    sort: { createdAt: 1 },
+    limit: safeLimit,
+    skip,
+  });
 
-	return messages || [];
+  return messages || [];
 };
 
 export const getMessages = async (
-	filter: FilterQuery<IMessage>,
-	projection?: ProjectionType<IMessage>,
-	options?: QueryOptions<IMessage>
+  filter: FilterQuery<IMessage>,
+  projection?: ProjectionType<IMessage>,
+  options?: QueryOptions<IMessage>,
 ): Promise<IMessage[] | null> => {
-	const messages = await Message.find<IMessage & Document>(
-		filter,
-		projection,
-		options
-	);
-	if (!messages.length) return null;
+  const messages = await Message.find<IMessage & Document>(
+    filter,
+    projection,
+    options,
+  );
+  if (!messages.length) return null;
 
-	return (await Promise.all(messages.map(formatMessage))).filter((m) => !!m);
+  return (await Promise.all(messages.map(formatMessage))).filter((m) => !!m);
 };

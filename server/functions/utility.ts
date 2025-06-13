@@ -16,19 +16,19 @@ export const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
  * @returns
  */
 export const makeRateLimiter = (allowedRequestsPerMinute: number) =>
-	rateLimit({
-		windowMs: 60 * 1000,
-		max: allowedRequestsPerMinute,
-		handler: (_req, res) => res.status(429).json({ message: Status["429"] }),
-		keyGenerator: async (req, res) => {
-			const token = res.locals.token;
-			const user = (token && (await getUserFromToken(token))) || undefined;
-			// if user is authenticated, set the identifier to the user id
-			// if not then set it to the token or the ip address or unknown
-			return user ? user.id : req.ip || token;
-		},
-	});
+  rateLimit({
+    windowMs: 60 * 1000,
+    max: allowedRequestsPerMinute,
+    handler: (_req, res) => res.status(429).json({ message: Status["429"] }),
+    keyGenerator: async (req, res) => {
+      const token = res.locals.token;
+      const user = (token && (await getUserFromToken(token))) || undefined;
+      // if user is authenticated, set the identifier to the user id
+      // if not then set it to the token or the ip address or unknown
+      return user ? user.id : req.ip || token;
+    },
+  });
 
 export function nextRouter(_req: Request, _res: Response, next: NextFunction) {
-	next("router");
+  next("router");
 }

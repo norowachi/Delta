@@ -5,35 +5,36 @@ import { makeRateLimiter, nextRouter } from "../../../functions/utility.js";
 const guildCreateRouter = express.Router();
 
 guildCreateRouter.post(
-	"/",
-	makeRateLimiter(5),
-	async (req, res: Response, next) => {
-		if (!res.locals.token) {
-			res.locals.status = "401";
-			return next();
-		}
-		const { name, icon, ownerId } = req.body;
-		let result = await createGuild({
-			name: name,
-			icon: icon,
-			ownerId: ownerId,
-		});
-		if (!result) {
-			res.locals.status = "500";
-			return next();
-		}
-		res.locals.status = "200";
-		res.locals.json = {
-			id: result.id,
-			name: result.name,
-			icon: result.icon,
-			memberCount: result.memberCount,
-			members: result.members,
-			ownerId: result.ownerId,
-			channels: result.channels,
-			deleted: result.deleted,
-		};
-		return next();
-	},
-	nextRouter
+  "/",
+  // TODO: enable
+  makeRateLimiter(0), //5
+  async (req, res: Response, next) => {
+    if (!res.locals.token) {
+      res.locals.status = "401";
+      return next();
+    }
+    const { name, icon, ownerId } = req.body;
+    let result = await createGuild({
+      name: name,
+      icon: icon,
+      ownerId: ownerId,
+    });
+    if (!result) {
+      res.locals.status = "500";
+      return next();
+    }
+    res.locals.status = "200";
+    res.locals.json = {
+      id: result.id,
+      name: result.name,
+      icon: result.icon,
+      memberCount: result.memberCount,
+      members: result.members,
+      ownerId: result.ownerId,
+      channels: result.channels,
+      deleted: result.deleted,
+    };
+    return next();
+  },
+  nextRouter,
 );
