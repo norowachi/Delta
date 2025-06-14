@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Response } from "express";
 
 const TenorRouter = express.Router();
 
@@ -22,7 +22,7 @@ const fetch = NodeFetchCache.create({
 });
 
 // Get tenor gifs
-TenorRouter.post("/", async (req, res) => {
+TenorRouter.post("/", async (req, res): Promise<any> => {
   const body = req.body;
   if (!body) return res.status(400).json(Status[400]);
 
@@ -73,7 +73,7 @@ TenorRouter.post("/", async (req, res) => {
 });
 
 // Get tenor categories
-TenorRouter.get("/", async (_, res) => {
+TenorRouter.get("/", async (_, res): Promise<any> => {
   // call tenor api
   const response = await fetch(
     `https://tenor.googleapis.com/v2/categories?type=featured&key=${env.TENOR_API_KEY}`

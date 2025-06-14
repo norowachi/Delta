@@ -62,15 +62,11 @@ export const getKey = async () => {
         );
         // the key's data
         const kdata = kd.plaintext.toString("utf-8");
-        // add the new key to the keystore
-        await enckeystore.add(
-          await jose.JWK.asKey(newKey)
-        );
 
         // reencrypt the data key with the new key
         const enckd = await jose.JWE.createEncrypt(
           { format: "compact" },
-          enckeystore.all()
+          newKey
         )
           .update(kdata)
           .final();

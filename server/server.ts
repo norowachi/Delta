@@ -28,7 +28,7 @@ app.use("/images", images);
 app.use(express.json());
 
 app.set("trust proxy", 1);
-app.get("/ip", (request, response) => response.send(request.ip));
+app.get("/ip", (request, response): any => response.send(request.ip));
 
 app.use(function (_, res, next) {
   res
@@ -52,7 +52,7 @@ app.use(
       // }
     },
     credentials: true,
-  }),
+  })
 );
 
 app.use(bodyParser.json({ limit: "25mb" }));
@@ -72,8 +72,8 @@ app.use("/auth/register", makeRateLimiter(10), registerRouter);
 const APIMiddleware = async (
   req: Request,
   res: Response,
-  next: NextFunction,
-) => {
+  next: NextFunction
+): Promise<any> => {
   const [type, token] = req.header("Authorization")?.split(" ") || [];
   if ((type?.length || 0) >= 0 && type !== "Bearer") {
     return res.status(401).json({ message: Status["401"] });
@@ -87,7 +87,7 @@ const APIMiddleware = async (
   return next();
 };
 
-export const APIReturner = async (_: Request, res: Response) => {
+export const APIReturner = async (_: Request, res: Response): Promise<any> => {
   if (!res.writable) return;
 
   const code: keyof typeof Status = res.locals.status || "500";
@@ -145,7 +145,7 @@ io.on("connection", async (socket: Socket) => {
   }
 
   console.log(
-    `\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id}\x1b[0m connected in WS \x1b[32m${socket.id}\x1b[0m`,
+    `\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id}\x1b[0m connected in WS \x1b[32m${socket.id}\x1b[0m`
   );
   socket.join(user.id);
 
@@ -156,7 +156,7 @@ io.on("connection", async (socket: Socket) => {
         const id = user.id;
 
         console.log(
-          `\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id}\x1b[0m (\x1b[32m${socket.id}\x1b[0m) sent \x1b[36mHELLO\x1b[0m`,
+          `\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id}\x1b[0m (\x1b[32m${socket.id}\x1b[0m) sent \x1b[36mHELLO\x1b[0m`
         );
 
         // get all unread messages
@@ -168,7 +168,7 @@ io.on("connection", async (socket: Socket) => {
                 .map((g) =>
                   g.channels
                     .filter((c) => c.members.includes(id))
-                    .map((c) => c.id),
+                    .map((c) => c.id)
                 )
                 .flat(),
             },
@@ -176,7 +176,7 @@ io.on("connection", async (socket: Socket) => {
           {
             _id: 0,
             channelId: 1,
-          },
+          }
         );
 
         // send a dummy to just fill in
@@ -219,7 +219,7 @@ io.on("connection", async (socket: Socket) => {
     const RequestedChannels = rooms.filter((room) => room.startsWith("c"));
 
     const possibleChannels = (await getChannels(RequestedChannels))?.filter(
-      (channel) => channel.members?.includes(user.id.toString()),
+      (channel) => channel.members?.includes(user.id.toString())
     );
 
     return socket.join((possibleChannels || []).map((r) => r.id));
@@ -241,7 +241,7 @@ io.on("connection", async (socket: Socket) => {
   // Handle client disconnection
   socket.on("disconnect", () => {
     console.log(
-      `\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id}\x1b[0m (\x1b[32m${socket.id}\x1b[0m) \x1b[31mDisconnected\x1b[0m`,
+      `\x1b[36m[Websocket] \x1b[35m${user.username} | ${user.id}\x1b[0m (\x1b[32m${socket.id}\x1b[0m) \x1b[31mDisconnected\x1b[0m`
     );
     clearInterval(heartbeatInterval);
   });

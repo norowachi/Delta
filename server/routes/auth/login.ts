@@ -8,7 +8,7 @@ import { Status } from "../../constants.js";
 const loginRouter = express.Router();
 
 // Login route
-loginRouter.post("/", async (req, res) => {
+loginRouter.post("/", async (req, res): Promise<any> => {
   const { username, handle, password } = req.body;
   if ((!username && !handle) || !password) {
     return res.status(400).json({ message: "Invalid credentials" });

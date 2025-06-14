@@ -8,7 +8,7 @@ import { IUser } from "../../interfaces.js";
 const registerRouter = express.Router();
 
 // Register route
-registerRouter.post("/", async (req, res) => {
+registerRouter.post("/", async (req, res): Promise<any> => {
   let {
     username,
     handle,
